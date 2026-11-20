@@ -138,3 +138,20 @@ export function quickRoutine(text: string): Routine | null {
 
 /** Fold case and diacritics for forgiving search. */
 export const fold = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
+/** Return `title` if free, otherwise the first free "title copy", "title copy 2", and so on. */
+export function uniqueTitle(title: string, taken: string[]): string {
+  const used = new Set(taken.map((t) => fold(t.trim())))
+  if (!used.has(fold(title.trim()))) return title
+  const base = title.trim().replace(/ copy(?: \d+)?$/i, '')
+  for (let n = 1; ; n++) {
+    const candidate = n === 1 ? `${base} copy` : `${base} copy ${n}`
+    if (!used.has(fold(candidate))) return candidate
+  }
+}
+
+/** Set the routine's `# title` line, adding one at the top when there is none. */
+export function withTitle(source: string, title: string): string {
+  const line = /^[ \t]*#(?!#).*$/m
+  return line.test(source) ? source.replace(line, () => `# ${title}`) : `# ${title}\n\n${source}`
+}

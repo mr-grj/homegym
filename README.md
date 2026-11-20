@@ -69,6 +69,7 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 | `S` · `V` | Sound · voice |
 | `M` · `[` · `]` | Music: play/pause, previous, next |
 | `H` · `?` | History · all shortcuts |
+| `⌘⏎` · `⌘⇧⏎` | In the editor: save · save as a new routine |
 
 Quick timers are logged automatically. Routines end with a short finish sheet. Anything you delete can be undone for a few seconds.
 
@@ -101,6 +102,8 @@ Hollow hold 30s
 | `Exercise` | No duration: runs until you press `→` |
 
 The [`examples/`](examples) folder has ready-made routines for strength, HIIT, mobility, breathing and focused work. Copy one into **+ Routine** and adjust it.
+
+To make a variation of a routine, open it, change what you need and press **Save as new** (`⌘⇧⏎`). The original stays as it was, and the copy is named for you ("Full body (20 min) copy") unless you give it a new title.
 
 ## Music
 

@@ -1,7 +1,7 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
 import type { RoutineRecord } from '../api'
 import { clock } from '../format'
-import { parseRoutine, totalSeconds } from '../routine'
+import { parseRoutine, totalSeconds, uniqueTitle, withTitle } from '../routine'
 import { tip } from './Tooltips'
 
 const TEMPLATE = `# New routine
@@ -20,27 +20,38 @@ Squats 40s
 
 type Props = {
   record: RoutineRecord | null
+  titles: string[]
   onSave: (source: string) => Promise<void>
+  onSaveAsNew: (source: string) => Promise<void>
   onDelete: () => void
 }
 
-export function Editor({ record, onSave, onDelete }: Props) {
+export function Editor({ record, titles, onSave, onSaveAsNew, onDelete }: Props) {
   const initial = record?.source ?? TEMPLATE
   const [source, setSource] = useState(initial)
   const [busy, setBusy] = useState(false)
   const routine = useMemo(() => parseRoutine(source), [source])
   const total = totalSeconds(routine.steps)
 
+  const copyTitle = uniqueTitle(routine.title, titles)
+  const canSave = !busy && routine.steps.length > 0
+
   const save = async () => {
-    if (busy || !routine.steps.length) return
+    if (!canSave) return
     setBusy(true)
     await onSave(source).finally(() => setBusy(false))
+  }
+
+  const saveAsNew = async () => {
+    if (!canSave || !record) return
+    setBusy(true)
+    await onSaveAsNew(copyTitle === routine.title ? source : withTitle(source, copyTitle)).finally(() => setBusy(false))
   }
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
-      void save()
+      void (e.shiftKey && record ? saveAsNew() : save())
     } else if (e.key === 'Escape' && source !== initial && !confirm('Discard your changes?')) {
       e.preventDefault()
     }
@@ -92,7 +103,17 @@ export function Editor({ record, onSave, onDelete }: Props) {
             Delete
           </button>
         )}
-        <button className="btn primary" onClick={save} disabled={busy || !routine.steps.length} {...tip('Save routine', '⌘⏎')}>
+        {record && (
+          <button
+            className="btn secondary"
+            onClick={saveAsNew}
+            disabled={!canSave}
+            {...tip(`Save as a new routine “${copyTitle}”. The original stays as it was`, '⌘⇧⏎')}
+          >
+            Save as new <kbd>⌘⇧⏎</kbd>
+          </button>
+        )}
+        <button className="btn primary" onClick={save} disabled={!canSave} {...tip(record ? 'Save changes to this routine' : 'Save routine', '⌘⏎')}>
           Save <kbd>⌘⏎</kbd>
         </button>
       </footer>

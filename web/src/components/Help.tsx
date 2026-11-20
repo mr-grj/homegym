@@ -13,6 +13,7 @@ const keys: [string, string][] = [
   ['[  ]', 'Previous · next track'],
   ['⌘V', 'Paste a YouTube link → music'],
   ['/', 'Focus the input'],
+  ['⌘⏎ · ⌘⇧⏎', 'Editor: save · save as new'],
 ]
 
 const quick: [string, string][] = [

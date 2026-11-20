@@ -223,6 +223,7 @@ kbd {
   }
 
   .exit kbd,
+  .btn kbd,
   .keys-only {
     display: none;
   }
@@ -853,6 +854,7 @@ kbd {
 
 .sheet-foot {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 22px;
@@ -887,6 +889,15 @@ kbd {
 .btn.ghost {
   color: var(--muted);
   margin-right: auto;
+}
+
+.btn.secondary {
+  border: 1px solid var(--line);
+}
+
+.btn.secondary:hover:not(:disabled) {
+  border-color: var(--muted);
+  background: color-mix(in oklab, var(--fg) 7%, transparent);
 }
 
 .btn.ghost:hover {
@@ -1741,6 +1752,24 @@ kbd {
 
   .sheet {
     padding: 20px;
+  }
+
+  .editor .sheet-foot:has(.secondary) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .editor .sheet-foot:has(.secondary) .btn {
+    justify-content: center;
+    padding-inline: 10px;
+    white-space: nowrap;
+  }
+
+  .editor .sheet-foot:has(.secondary) .ghost {
+    grid-column: 1 / -1;
+    order: 1;
+    justify-self: center;
+    margin: 0;
   }
 
   .controls {

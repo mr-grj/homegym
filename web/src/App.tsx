@@ -264,6 +264,17 @@ export default function App() {
     }
   }
 
+  const saveRoutineAsNew = async (source: string) => {
+    try {
+      const saved = await api.createRoutine(source)
+      await loadRoutines()
+      setPanel(null)
+      notify(`Saved as “${parseRoutine(saved.source).title}”`, () => api.deleteRoutine(saved.id).then(loadRoutines))
+    } catch {
+      notify('Could not save the routine')
+    }
+  }
+
   const deleteRoutine = async (record: RoutineRecord) => {
     await api.deleteRoutine(record.id)
     await loadRoutines()
@@ -439,7 +450,9 @@ export default function App() {
         <Modal onClose={() => setPanel(null)} wide>
           <Editor
             record={panel.edit}
+            titles={routines.map((r) => r.title)}
             onSave={(source) => saveRoutine(panel.edit?.id ?? null, source)}
+            onSaveAsNew={saveRoutineAsNew}
             onDelete={() => panel.edit && void deleteRoutine(panel.edit)}
           />
         </Modal>
