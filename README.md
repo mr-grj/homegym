@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  <b>DEMO:</b> <a href="https://mr-grj.github.io/homegym/">mr-grj.github.io/homegym</a><br>
+  <sub>Runs entirely in your browser. Nothing you add leaves your device.</sub>
+</p>
+
+<p align="center">
   <img src="docs/screenshots/workout.png" alt="A workout in progress: big countdown, current exercise, notes and a timeline of every block" width="900">
 </p>
 
