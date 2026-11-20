@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from 
 import type { Session } from '../api'
 import { clock, dayKey, human } from '../format'
 import { parseMusic, type Source } from '../music'
-import { fold, quickRoutine, totalSeconds, type Routine } from '../routine'
+import { fold, quickRoutine, totalSeconds, uniqueTimers, type Routine } from '../routine'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
 import { useScrollFade } from './useScrollFade'
@@ -58,7 +58,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
         ? `start ${clock(seconds)} countdown${target.routine.title === 'Timer' ? '' : ` · ${target.routine.title}`}`
         : 'start stopwatch'
 
-  const timers = recent.flatMap((t) => recentTimer(t) ?? []).slice(0, 4)
+  const timers = uniqueTimers(recent).flatMap((t) => recentTimer(t) ?? []).slice(0, 3)
   const today = sessions.filter((s) => dayKey(s.started_at) === dayKey(new Date().toISOString()))
   const todaySeconds = today.reduce((sum, s) => sum + s.seconds, 0)
 
@@ -125,7 +125,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
                   <span className="chip-play">
                     <Icon name="play" />
                   </span>
-                  {t.label}
+                  <span className="recent-label">{t.label}</span>
                 </button>
               ))}
             </div>
