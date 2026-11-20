@@ -9,10 +9,11 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Annotated
 
-from fastapi import Body, FastAPI, HTTPException, Path as Param, Query, Response
-from pydantic import BaseModel, Field
+from fastapi import Body, FastAPI, HTTPException, Query, Response
+from fastapi import Path as PathParam
+from pydantic import BaseModel, Field, JsonValue
 
 DB_PATH = Path(os.environ.get("HOMEGYM_DB", "homegym.db"))
 SEED = Path(__file__).with_name("seed.txt")
@@ -71,6 +72,9 @@ class SessionIn(BaseModel):
 
 class Session(SessionIn):
     id: int
+
+
+SettingKey = Annotated[str, PathParam(pattern=r"^[\w.-]{1,64}$")]
 
 
 @contextmanager
@@ -164,9 +168,7 @@ def delete_routine(routine_id: int) -> Response:
 def list_sessions(limit: int = 500) -> list[Session]:
     """List logged sessions, newest first."""
     with db() as conn:
-        rows = conn.execute(
-            "SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?", (limit,)
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?", (limit,)).fetchall()
     return [to_session(row) for row in rows]
 
 
@@ -192,8 +194,16 @@ def create_session(body: SessionIn) -> Session:
     return to_session(row)
 
 
+@app.delete("/api/sessions/{session_id}", status_code=204)
+def delete_session(session_id: int) -> Response:
+    """Delete a logged session."""
+    with db() as conn:
+        conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+    return Response(status_code=204)
+
+
 @app.get("/api/settings")
-def get_settings() -> dict[str, Any]:
+def get_settings() -> dict[str, JsonValue]:
     """Return every stored setting by key."""
     with db() as conn:
         rows = conn.execute("SELECT key, value FROM settings").fetchall()
@@ -201,10 +211,7 @@ def get_settings() -> dict[str, Any]:
 
 
 @app.put("/api/settings/{key}", status_code=204)
-def put_setting(
-    key: str = Param(pattern=r"^[\w.-]{1,64}$"),
-    value: Any = Body(),
-) -> Response:
+def put_setting(key: SettingKey, value: Annotated[JsonValue, Body()]) -> Response:
     """Create or replace one setting."""
     encoded = json.dumps(value, ensure_ascii=False)
     if len(encoded.encode()) > MAX_SETTING_BYTES:
@@ -221,7 +228,7 @@ def put_setting(
 
 
 @app.get("/api/music/resolve")
-def resolve_link(url: str = Query(max_length=200)) -> dict[str, str]:
+def resolve_link(url: Annotated[str, Query(max_length=200)]) -> dict[str, str]:
     """Expand an on.soundcloud.com short link, which browsers cannot follow across origins."""
     match = SHORT_LINK.fullmatch(url)
     if not match:
@@ -237,11 +244,3 @@ def resolve_link(url: str = Query(max_length=200)) -> dict[str, str]:
     if not FULL_LINK.fullmatch(location):
         raise HTTPException(404, "Unknown short link")
     return {"url": location}
-
-
-@app.delete("/api/sessions/{session_id}", status_code=204)
-def delete_session(session_id: int) -> Response:
-    """Delete a logged session."""
-    with db() as conn:
-        conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
-    return Response(status_code=204)
