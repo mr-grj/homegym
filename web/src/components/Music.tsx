@@ -4,6 +4,7 @@ import { attach, music, parseMusic, resolveSource, useMusic } from '../music'
 import { useSetting } from '../store'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
+import { useScrollFade } from './useScrollFade'
 
 const spot = (position: { index: number; time: number } | undefined, playlist: boolean) =>
   position && (playlist ? `track ${position.index + 1} · ${clock(position.time)}` : clock(position.time))
@@ -113,26 +114,7 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
   const source = parseMusic(text)
   const invalid = text.trim() !== '' && !source
   const saved = m.source ? spot(m.positions[m.source.url], !!m.source.list) : undefined
-  const list = useRef<HTMLUListElement>(null)
-  const [fade, setFade] = useState({ top: false, bottom: false })
-
-  const measure = () => {
-    const el = list.current
-    if (!el) return
-    const top = el.scrollTop > 2
-    const bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 2
-    setFade((f) => (f.top === top && f.bottom === bottom ? f : { top, bottom }))
-  }
-
-  useEffect(() => {
-    const el = list.current
-    if (!el) return
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [m.recent.length > 0])
-
-  useEffect(measure, [m.recent])
+  const scroll = useScrollFade<HTMLUListElement>(m.recent)
 
   const load = (url: string) => {
     const parsed = parseMusic(url)
@@ -194,7 +176,7 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
       {(invalid || failure) && <p className="picker-error">{failure || 'That doesn’t look like a YouTube or SoundCloud link'}</p>}
 
       {m.recent.length > 0 && (
-        <ul className="recent-music" ref={list} onScroll={measure} data-fade-top={fade.top || undefined} data-fade-bottom={fade.bottom || undefined}>
+        <ul className="recent-music" {...scroll}>
           {m.recent.map((r) => (
             <li key={r.url} data-active={r.url === m.source?.url || undefined}>
               <button className="grow" onClick={() => load(r.url)} {...tip(`Play “${r.label || r.url}”`)}>
