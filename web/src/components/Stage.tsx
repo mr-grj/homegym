@@ -1,15 +1,14 @@
 import type { CSSProperties, MouseEvent } from 'react'
-import type { Prefs } from '../App'
 import { clock } from '../format'
 import { totalSeconds } from '../routine'
-import { face, totalElapsed, type Run } from '../timer'
+import { countdown, face, totalElapsed, type Run } from '../timer'
+import { useNow } from '../workout'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
 
 type Props = {
   run: Run
-  now: number
-  prefs: Prefs
+  elapsed: boolean
   onToggle: () => void
   onSkip: () => void
   onBack: () => void
@@ -65,14 +64,15 @@ function Timeline({ run, progress, onJump }: { run: Run; progress: number; onJum
   )
 }
 
-export function Stage({ run, now, prefs, onToggle, onSkip, onBack, onStop, onExtend, onJump, onMode }: Props) {
-  const f = face(run, now, prefs.elapsed)
+export function Stage({ run, elapsed, onToggle, onSkip, onBack, onStop, onExtend, onJump, onMode }: Props) {
+  const now = useNow()
+  const f = face(run, now, elapsed)
   const next = run.steps[run.index + 1]
   const block = run.routine.blocks[f.step.block]
   const total = totalSeconds(run.steps)
   const multi = run.steps.length > 1
   const state = run.finishedAt ? 'done' : run.since !== null ? 'running' : run.startedAt ? 'paused' : 'armed'
-  const urgent = state === 'running' && f.remaining !== null && f.remaining <= 3000 && (f.step.seconds ?? 0) >= 10
+  const urgent = countdown(run, now) !== null
 
   return (
     <main className="stage" data-state={state} onClick={onToggle} style={{ '--p': f.progress } as CSSProperties}>

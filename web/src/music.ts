@@ -116,8 +116,12 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
-/** Subscribe a component to the music player state. */
-export const useMusic = () => useSyncExternalStore(subscribe, () => state)
+/** Subscribe a component to the music player state, or to the part `select` picks so other changes skip it. */
+export function useMusic(): MusicState
+export function useMusic<T>(select: (state: MusicState) => T): T
+export function useMusic<T>(select?: (state: MusicState) => T) {
+  return useSyncExternalStore(subscribe, () => (select ? select(state) : state))
+}
 
 /** Read a YouTube, YouTube Music or SoundCloud link. */
 export const parseMusic = (text: string) => parseYouTube(text) ?? parseSoundCloud(text)

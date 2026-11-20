@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
-import { api, type RoutineRecord, type Session } from './api'
+import { api, type RoutineRecord, type Session, type SessionInput } from './api'
 import { Editor } from './components/Editor'
 import { Finish, type FinishForm } from './components/Finish'
 import { Help } from './components/Help'
@@ -15,30 +15,31 @@ import { VoicePicker } from './components/Voice'
 import { human } from './format'
 import { music, parseMusic, resolveSource, useMusic, type Source } from './music'
 import { parseRoutine, stepLibrary, type Routine } from './routine'
-import { baseLang, cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
+import { baseLang } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
-import { advance, arm, back, extend, face, finish, jump, pause, play, stepRemaining, type Run } from './timer'
+import { arm, totalElapsed, type Run } from './timer'
+import { useWorkout, type Prefs } from './workout'
 
-export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean }
 type Panel = 'finish' | 'history' | 'help' | 'music' | 'voice' | { edit: RoutineRecord | null } | null
 type Toast = { id: number; text: string; undo?: () => void; key?: string }
 
-const phrases = (lang?: string) =>
-  lang?.startsWith('ro') ? { next: 'Urmează', done: 'Gata. Bravo!' } : { next: 'Next', done: 'Done' }
+const sessionTimes = (run: Run, now: number): Pick<SessionInput, 'title' | 'started_at' | 'ended_at' | 'seconds'> => ({
+  title: run.routine.title,
+  started_at: run.startedAt ?? new Date(now).toISOString(),
+  ended_at: run.finishedAt ?? new Date(now).toISOString(),
+  seconds: Math.round(totalElapsed(run, now) / 1000),
+})
 
 export default function App() {
   const [records, setRecords] = useState<RoutineRecord[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
-  const [run, setRun] = usePersistent<Run | null>('homegym.run', null)
   const [prefs, setPrefs] = useSetting<Prefs>('homegym.prefs', { sound: true, voice: true, elapsed: false })
   const [recent, setRecent] = useSetting<string[]>('homegym.recent', [])
   const [voices, setVoices] = usePersistent<Record<string, string>>('homegym.voices', {})
   const [panel, setPanel] = useState<Panel>(null)
   const [toast, setToast] = useState<Toast | null>(null)
-  const [now, setNow] = useState(() => Date.now())
-  const lastLeft = useRef(0)
   const launcher = useRef<HTMLInputElement>(null)
-  const tunes = useMusic()
+  const hasMusic = useMusic((m) => m.source !== null)
 
   const routines = useMemo(() => records.map((r) => parseRoutine(r.source, r.id)), [records])
   const library = useMemo(() => stepLibrary(records.map((r) => r.source)), [records])
@@ -47,7 +48,6 @@ export default function App() {
     for (const r of routines) if (r.lang && !found.has(baseLang(r.lang))) found.set(baseLang(r.lang), r.lang)
     return [...found.values()]
   }, [routines])
-  const running = run?.since != null
 
   const notify = (text: string, undo?: () => void, key?: string) => setToast({ id: Date.now(), text, undo, key })
   const dropEditorToast = () => setToast((t) => (t?.key === '⌘Z' ? null : t))
@@ -80,61 +80,25 @@ export default function App() {
     return () => clearTimeout(id)
   }, [toast])
 
-  useEffect(() => {
-    if (!running) return
-    const id = setInterval(() => setNow(Date.now()), 100)
-    return () => clearInterval(id)
-  }, [running])
-
-  useWakeLock(running)
-
-  useEffect(() => {
-    if (!run) {
-      document.title = 'homegym'
-      return
-    }
-    const f = face(run, now, prefs.elapsed)
-    document.title = `${run.finishedAt ? '✓' : run.since === null ? '❚❚' : '▶'} ${f.display} · ${f.step.label}`
-  }, [run, now, prefs.elapsed])
-
-  const say = (text: string, lang?: string) => speak(text, lang, voices[baseLang(lang)])
-
-  const announce = (next: Run) => {
-    const step = next.steps[next.index]
-    if (prefs.sound) (step.rest ? cue.rest : cue.work)()
-    vibrate(step.rest ? [80] : [120, 60, 120])
-    if (!prefs.voice || next.routine.quick) return
-    music.duck(2800)
-    const after = next.steps[next.index + 1]
-    const text = step.rest && after ? `${step.label}. ${phrases(next.routine.lang).next}: ${after.label}` : step.label
-    setTimeout(() => say(text, next.routine.lang), 350)
-  }
-
-  const logQuick = async (done: Run, minimum = 1) => {
-    const seconds = Math.round(done.total / 1000)
-    if (seconds < minimum || !done.startedAt) return
+  const logQuick = async (done: Run, minimum: number) => {
+    const times = sessionTimes(done, Date.now())
+    if (times.seconds < minimum || !done.startedAt) return
     try {
-      const saved = await api.createSession({
-        title: done.routine.title,
-        started_at: done.startedAt,
-        ended_at: done.finishedAt ?? new Date().toISOString(),
-        seconds,
-        effort: null,
-        notes: '',
-        blocks: [],
-      })
+      const saved = await api.createSession({ ...times, effort: null, notes: '', blocks: [] })
       void loadSessions()
-      notify(`Logged ${done.routine.title} · ${human(seconds)}`, () => api.deleteSession(saved.id).then(loadSessions))
+      notify(`Logged ${done.routine.title} · ${human(times.seconds)}`, () => api.deleteSession(saved.id).then(loadSessions))
     } catch {
       notify('Could not log. Is the API running?')
     }
   }
 
-  const follow = (playing: boolean) => {
-    if (!music.state.follow || !music.state.source) return
-    if (playing) music.play()
-    else music.pause()
-  }
+  const workout = useWorkout({
+    prefs,
+    voices,
+    onLog: (done, minimum) => void logQuick(done, minimum),
+    onReview: () => setPanel('finish'),
+  })
+  const { run, running } = workout
 
   const loadMusic = async (link: Source) => {
     let source: Source
@@ -149,117 +113,16 @@ export default function App() {
     notify(autoplay ? 'Music loaded' : music.state.follow ? 'Music ready. It starts with your timer' : 'Music ready. Press M to play')
   }
 
-  const complete = (done: Run) => {
-    if (music.state.follow) music.fadeOut()
-    if (prefs.sound) cue.done()
-    vibrate([200, 100, 200, 100, 400])
-    if (prefs.voice) say(phrases(done.routine.lang).done, done.routine.lang)
-    if (done.routine.quick) void logQuick(done)
-    else setPanel('finish')
-  }
-
-  const onTick = useEffectEvent(() => {
-    if (!run || run.since === null) return
-    const next = advance(run, now)
-    if (next !== run) {
-      setRun(next)
-      if (next.finishedAt) complete(next)
-      else announce(next)
-      return
-    }
-    const remaining = stepRemaining(run, now)
-    const left = remaining === null ? 0 : Math.ceil(remaining / 1000)
-    if (left !== lastLeft.current && left >= 1 && left <= 3 && (run.steps[run.index].seconds ?? 0) >= 10) {
-      if (prefs.sound) cue.tick()
-      if (prefs.sound || prefs.voice) music.duck(left * 1000 + (prefs.voice && !run.routine.quick ? 2600 : 900))
-    }
-    lastLeft.current = left
-  })
-
-  useEffect(() => onTick(), [now])
-
-  const update = (next: Run, speakIfMoved = true) => {
-    const t = Date.now()
-    setRun(next)
-    setNow(t)
-    if ((run?.since != null) !== (next.since != null) && !next.finishedAt) follow(next.since != null)
-    if (speakIfMoved && next.since !== null && next.offset === 0) announce(next)
-  }
-
-  const toggle = () => {
-    unlockAudio()
-    if (!run) return launcher.current?.focus()
-    if (run.finishedAt) return run.routine.quick ? setRun(null) : setPanel('finish')
-    const t = Date.now()
-    update(run.since === null ? play(run, t) : pause(run, t))
-  }
-
-  const skip = () => {
-    if (!run || run.finishedAt) return
-    const t = Date.now()
-    const last = run.index === run.steps.length - 1
-    if (last && !run.startedAt) return
-    const next = last ? finish(run, t) : jump(run, run.index + 1, t)
-    update(next)
-    if (next.finishedAt) complete(next)
-  }
-
-  const backStep = () => {
-    if (!run || (run.finishedAt && run.routine.quick)) return
-    update(back(run, Date.now()))
-  }
-
-  const jumpTo = (index: number) => {
-    if (!run || (run.finishedAt && run.routine.quick)) return
-    update(jump(run, index, Date.now()))
-  }
-
-  const extendBy = (seconds: number) => {
-    if (!run || run.finishedAt) return
-    update(extend(run, seconds, Date.now()), false)
-  }
-
-  const stop = () => {
-    if (!run) return
-    if (!run.startedAt || (run.finishedAt && run.routine.quick)) return setRun(null)
-    follow(false)
-    if (run.routine.quick) {
-      void logQuick(finish(run, Date.now()), 5)
-      return setRun(null)
-    }
-    setRun(pause(run, Date.now()))
-    setPanel('finish')
-  }
-
   const startQuick = (routine: Routine, text: string) => {
-    unlockAudio()
-    if (prefs.sound) cue.work()
-    const t = Date.now()
-    setRun(play(arm(routine), t))
-    setNow(t)
-    follow(true)
+    workout.startQuick(routine)
     if (text) setRecent((list) => [text, ...list.filter((x) => x !== text)].slice(0, 6))
-  }
-
-  const openRoutine = (routine: Routine) => {
-    unlockAudio()
-    setRun(arm(routine))
-    setNow(Date.now())
   }
 
   const saveWorkout = async (form: FinishForm) => {
     if (!run) return
-    const t = Date.now()
-    const done = pause(run, t)
     try {
-      const saved = await api.createSession({
-        title: done.routine.title,
-        started_at: done.startedAt ?? new Date(t).toISOString(),
-        ended_at: done.finishedAt ?? new Date(t).toISOString(),
-        seconds: Math.round(done.total / 1000),
-        ...form,
-      })
-      setRun(null)
+      const saved = await api.createSession({ ...sessionTimes(run, Date.now()), ...form })
+      workout.setRun(null)
       setPanel(null)
       void loadSessions()
       notify('Workout saved', () => api.deleteSession(saved.id).then(loadSessions))
@@ -269,7 +132,7 @@ export default function App() {
   }
 
   const discardWorkout = () => {
-    setRun(null)
+    workout.setRun(null)
     setPanel(null)
     notify('Workout discarded')
   }
@@ -279,7 +142,7 @@ export default function App() {
       const saved = id === null ? await api.createRoutine(source) : await api.updateRoutine(id, source)
       await loadRoutines()
       setPanel(null)
-      if (run && !run.startedAt && run.routine.id === saved.id) setRun(arm(parseRoutine(saved.source, saved.id)))
+      if (run && !run.startedAt && run.routine.id === saved.id) workout.setRun(arm(parseRoutine(saved.source, saved.id)))
     } catch {
       notify('Could not save the routine')
     }
@@ -300,7 +163,7 @@ export default function App() {
     await api.deleteRoutine(record.id)
     await loadRoutines()
     setPanel(null)
-    if (run && !run.startedAt && run.routine.id === record.id) setRun(null)
+    if (run && !run.startedAt && run.routine.id === record.id) workout.setRun(null)
     notify(`Deleted ${parseRoutine(record.source).title}`, () => api.createRoutine(record.source).then(loadRoutines))
   }
 
@@ -345,21 +208,21 @@ export default function App() {
       },
     }
     const during: Record<string, () => void> = {
-      ' ': toggle,
-      Enter: toggle,
-      k: toggle,
-      ArrowRight: skip,
-      l: skip,
-      n: skip,
-      ArrowLeft: backStep,
-      j: backStep,
-      p: backStep,
-      ArrowUp: () => extendBy(60),
-      '+': () => extendBy(60),
-      '=': () => extendBy(60),
-      ArrowDown: () => extendBy(-60),
-      '-': () => extendBy(-60),
-      Escape: stop,
+      ' ': workout.toggle,
+      Enter: workout.toggle,
+      k: workout.toggle,
+      ArrowRight: workout.skip,
+      l: workout.skip,
+      n: workout.skip,
+      ArrowLeft: workout.stepBack,
+      j: workout.stepBack,
+      p: workout.stepBack,
+      ArrowUp: () => workout.extendBy(60),
+      '+': () => workout.extendBy(60),
+      '=': () => workout.extendBy(60),
+      ArrowDown: () => workout.extendBy(-60),
+      '-': () => workout.extendBy(-60),
+      Escape: workout.stop,
       e: () => run?.routine.id != null && editRoutine(run.routine.id),
     }
     const action = anytime[key] ?? (run ? during[key] : undefined)
@@ -391,7 +254,7 @@ export default function App() {
 
   const phase = !run ? 'idle' : run.finishedAt ? 'done' : run.steps[run.index].rest ? 'rest' : 'work'
   const tools: [IconName, string, string, () => void, boolean?][] = [
-    ['music', tunes.source ? 'Change music' : 'Add music: paste a YouTube or SoundCloud link', '⌘V', () => setPanel('music'), !!tunes.source || undefined],
+    ['music', hasMusic ? 'Change music' : 'Add music: paste a YouTube or SoundCloud link', '⌘V', () => setPanel('music'), hasMusic || undefined],
     [prefs.sound ? 'sound' : 'mute', `Beeps and chimes ${prefs.sound ? 'on' : 'off'}`, 'S', () => flip('sound'), prefs.sound],
     ['voice', `Voice ${prefs.voice ? 'on' : 'off'}: pick how it sounds`, 'V', () => setPanel('voice'), prefs.voice],
     ['expand', 'Fullscreen', 'F', fullscreen],
@@ -400,7 +263,7 @@ export default function App() {
   ]
 
   return (
-    <div className="app" data-phase={phase} data-running={running || undefined} data-dock={tunes.source ? '' : undefined}>
+    <div className="app" data-phase={phase} data-running={running || undefined} data-dock={hasMusic ? '' : undefined}>
       <header className="bar">
         <span className="brand">
           <Logo />
@@ -424,7 +287,7 @@ export default function App() {
             </button>
           ))}
           {run && (
-            <button className="exit" onClick={stop} {...tip(exitLabel(run), 'Esc')}>
+            <button className="exit" onClick={workout.stop} {...tip(exitLabel(run), 'Esc')}>
               <Icon name="close" />
               <kbd>Esc</kbd>
             </button>
@@ -435,14 +298,13 @@ export default function App() {
       {run ? (
         <Stage
           run={run}
-          now={now}
-          prefs={prefs}
-          onToggle={toggle}
-          onSkip={skip}
-          onBack={backStep}
-          onStop={stop}
-          onExtend={extendBy}
-          onJump={jumpTo}
+          elapsed={prefs.elapsed}
+          onToggle={workout.toggle}
+          onSkip={workout.skip}
+          onBack={workout.stepBack}
+          onStop={workout.stop}
+          onExtend={workout.extendBy}
+          onJump={workout.jumpTo}
           onMode={() => flip('elapsed')}
         />
       ) : (
@@ -452,7 +314,7 @@ export default function App() {
           sessions={sessions}
           inputRef={launcher}
           onQuick={startQuick}
-          onOpen={openRoutine}
+          onOpen={workout.open}
           onEdit={editRoutine}
           onMusic={loadMusic}
         />
