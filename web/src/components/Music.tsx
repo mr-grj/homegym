@@ -8,27 +8,24 @@ import { tip } from './Tooltips'
 const spot = (position: { index: number; time: number } | undefined, playlist: boolean) =>
   position && (playlist ? `track ${position.index + 1} · ${clock(position.time)}` : clock(position.time))
 
-/** YouTube and SoundCloud logos, for the link placeholder. */
-function Brands() {
-  return (
-    <span className="brands">
-      <svg viewBox="0 0 28 20" role="img" aria-label="YouTube">
-        <rect width="28" height="20" rx="5.5" fill="#ff0033" />
-        <path d="M11 5.6v8.8l7.6-4.4z" fill="#fff" />
-      </svg>
-      or
-      <svg viewBox="0 0 32 16" role="img" aria-label="SoundCloud">
-        <g fill="#ff5500">
-          <rect x="0" y="9" width="1.6" height="6" rx="0.8" />
-          <rect x="3" y="7" width="1.6" height="8" rx="0.8" />
-          <rect x="6" y="5" width="1.6" height="10" rx="0.8" />
-          <rect x="9" y="3.5" width="1.6" height="11.5" rx="0.8" />
-          <path d="M12.2 15V3.2A7 7 0 0 1 24.6 6.8 4.2 4.2 0 1 1 27.8 15z" />
-        </g>
-      </svg>
-    </span>
-  )
-}
+const YouTubeLogo = () => (
+  <svg viewBox="0 0 28 20" role="img" aria-label="YouTube">
+    <rect width="28" height="20" rx="5.5" fill="#ff0033" />
+    <path d="M11 5.6v8.8l7.6-4.4z" fill="#fff" />
+  </svg>
+)
+
+const SoundCloudLogo = () => (
+  <svg viewBox="0 0 32 16" role="img" aria-label="SoundCloud">
+    <g fill="#ff5500">
+      <rect x="0" y="9" width="1.6" height="6" rx="0.8" />
+      <rect x="3" y="7" width="1.6" height="8" rx="0.8" />
+      <rect x="6" y="5" width="1.6" height="10" rx="0.8" />
+      <rect x="9" y="3.5" width="1.6" height="11.5" rx="0.8" />
+      <path d="M12.2 15V3.2A7 7 0 0 1 24.6 6.8 4.2 4.2 0 1 1 27.8 15z" />
+    </g>
+  </svg>
+)
 
 /** Floating mini player: card on wide screens, strip on narrow ones, disc when collapsed. */
 export function MusicDock() {
@@ -116,6 +113,26 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
   const source = parseMusic(text)
   const invalid = text.trim() !== '' && !source
   const saved = m.source ? spot(m.positions[m.source.url], !!m.source.list) : undefined
+  const list = useRef<HTMLUListElement>(null)
+  const [fade, setFade] = useState({ top: false, bottom: false })
+
+  const measure = () => {
+    const el = list.current
+    if (!el) return
+    const top = el.scrollTop > 2
+    const bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 2
+    setFade((f) => (f.top === top && f.bottom === bottom ? f : { top, bottom }))
+  }
+
+  useEffect(() => {
+    const el = list.current
+    if (!el) return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [m.recent.length > 0])
+
+  useEffect(measure, [m.recent])
 
   const load = (url: string) => {
     const parsed = parseMusic(url)
@@ -137,7 +154,7 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="picker">
+    <div className="picker music-picker">
       <header className="sheet-head">
         <h2>Music</h2>
       </header>
@@ -164,7 +181,11 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
           />
           {!text && (
             <span className="picker-placeholder" aria-hidden>
-              Paste a <Brands /> link
+              Paste a
+              <span className="brands">
+                <YouTubeLogo /> or <SoundCloudLogo />
+              </span>
+              link
             </span>
           )}
         </span>
@@ -173,11 +194,11 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
       {(invalid || failure) && <p className="picker-error">{failure || 'That doesn’t look like a YouTube or SoundCloud link'}</p>}
 
       {m.recent.length > 0 && (
-        <ul className="recent-music">
+        <ul className="recent-music" ref={list} onScroll={measure} data-fade-top={fade.top || undefined} data-fade-bottom={fade.bottom || undefined}>
           {m.recent.map((r) => (
             <li key={r.url} data-active={r.url === m.source?.url || undefined}>
               <button className="grow" onClick={() => load(r.url)} {...tip(`Play “${r.label || r.url}”`)}>
-                <Icon name={r.list ? 'list' : 'music'} />
+                <span className="source-logo">{r.kind === 'soundcloud' ? <SoundCloudLogo /> : <YouTubeLogo />}</span>
                 <span>{r.label || r.url}</span>
                 <small>{[r.list && 'playlist', m.resume && spot(m.positions[r.url], !!r.list)].filter(Boolean).join(' · ')}</small>
               </button>

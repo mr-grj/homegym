@@ -482,7 +482,6 @@ kbd {
 }
 
 
-
 .chip-time {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -1977,7 +1976,59 @@ kbd {
   padding: 0;
   margin-top: 14px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   gap: 4px;
+}
+
+.sheet:has(> .music-picker) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.music-picker {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.music-picker > * {
+  flex: none;
+}
+
+.music-picker > .recent-music {
+  flex: 0 1 auto;
+  min-height: 96px;
+  margin: 8px -6px 0;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--faint) transparent;
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
+}
+
+.recent-music[data-fade-top] {
+  --fade-top: 20px;
+}
+
+.recent-music[data-fade-bottom] {
+  --fade-bottom: 20px;
+}
+
+.recent-music .source-logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+}
+
+.source-logo svg {
+  width: 20px;
+  height: auto;
 }
 
 .recent-music li {
@@ -2020,8 +2071,15 @@ kbd {
   opacity: 0;
 }
 
-.recent-music li:hover .icon-btn {
+.recent-music li:hover .icon-btn,
+.recent-music .icon-btn:focus-visible {
   opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .recent-music .icon-btn {
+    opacity: 0.55;
+  }
 }
 
 .follow {
@@ -2078,6 +2136,71 @@ kbd {
 .howto b {
   color: var(--fg);
   font-weight: 600;
+}
+
+@media (max-height: 700px) {
+  .music-picker .howto {
+    display: none;
+  }
+}
+
+@media (max-height: 600px) {
+  .sheet:has(> .music-picker) {
+    padding: 18px;
+  }
+
+  .music-picker .sheet-head {
+    margin-bottom: 12px;
+  }
+
+  .music-picker .follow {
+    margin-top: 10px;
+    padding: 10px 12px;
+  }
+
+  .music-picker .follow small {
+    display: none;
+  }
+
+  .music-picker > .recent-music {
+    min-height: 76px;
+  }
+}
+
+@media (max-width: 480px) {
+  .follow {
+    flex-wrap: wrap;
+  }
+
+  .follow > span {
+    flex-basis: calc(100% - 30px);
+  }
+
+  .follow .restart {
+    margin-left: 30px;
+  }
+
+  .recent-music li > button.grow {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 1px;
+  }
+
+  .recent-music .source-logo {
+    grid-row: span 2;
+  }
+
+  .recent-music small {
+    grid-column: 2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recent-music small:empty {
+    display: none;
+  }
 }
 
 @media (max-width: 1000px) {

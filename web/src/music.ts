@@ -227,7 +227,7 @@ export const music = {
   load(source: Source, autoplay = false) {
     pendingPlay = autoplay
     const recent = [{ ...source, label: state.recent.find((r) => r.url === source.url)?.label ?? '' }, ...state.recent.filter((r) => r.url !== source.url)]
-    const kept = recent.slice(0, 5)
+    const kept = recent.slice(0, 20)
     const positions = Object.fromEntries(Object.entries(state.positions).filter(([url]) => kept.some((r) => r.url === url)))
     set({ source, recent: kept, positions, error: null })
   },
