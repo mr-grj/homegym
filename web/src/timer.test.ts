@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { clock, human } from './format'
 import { parseRoutine, quickRoutine } from './routine'
-import { advance, arm, back, extend, face, finish, jump, pause, play, stepElapsed, stepRemaining, totalElapsed } from './timer'
+import { advance, arm, back, countdown, extend, face, finish, jump, pause, play, stepElapsed, stepRemaining, totalElapsed } from './timer'
 
 const T0 = Date.UTC(2026, 10, 20, 7, 0, 0)
 const at = (seconds: number) => T0 + seconds * 1000
@@ -89,6 +89,25 @@ describe('timer', () => {
     expect(done.since).toBeNull()
     expect(done.total).toBe(42000)
     expect(done.finishedAt).toBe(new Date(at(42)).toISOString())
+  })
+})
+
+describe('countdown', () => {
+  const run = play(arm(routine), at(0))
+
+  test('covers the last three seconds of steps of ten seconds or more', () => {
+    expect(countdown(run, at(26.9))).toBeNull()
+    expect(countdown(run, at(27))).toBe(3)
+    expect(countdown(run, at(28.5))).toBe(2)
+    expect(countdown(run, at(29.99))).toBe(1)
+    expect(countdown(run, at(30))).toBe(0)
+  })
+
+  test('stays quiet when paused, open or short', () => {
+    expect(countdown(pause(run, at(28)), at(28))).toBeNull()
+    expect(countdown(jump(run, 4, at(0)), at(100))).toBeNull()
+    const short = play(arm(quickRoutine('9s')!), at(0))
+    expect(countdown(short, at(8))).toBeNull()
   })
 })
 

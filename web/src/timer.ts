@@ -22,6 +22,17 @@ export function stepRemaining(run: Run, now: number): number | null {
   return duration === null ? null : Math.max(0, duration - stepElapsed(run, now))
 }
 
+const COUNTDOWN_SECONDS = 3
+const COUNTDOWN_MIN_STEP = 10
+
+/** Whole seconds left (0 to 3) while a running step of at least 10s ends, otherwise null. */
+export function countdown(run: Run, now: number): number | null {
+  const remaining = stepRemaining(run, now)
+  const long = (run.steps[run.index].seconds ?? 0) >= COUNTDOWN_MIN_STEP
+  if (run.since === null || remaining === null || remaining > COUNTDOWN_SECONDS * 1000 || !long) return null
+  return Math.ceil(remaining / 1000)
+}
+
 /** Create a paused run positioned at the first step. */
 export function arm(routine: Routine): Run {
   return { routine, steps: routine.steps, index: 0, offset: 0, total: 0, since: null, startedAt: null, finishedAt: null }
