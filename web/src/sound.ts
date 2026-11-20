@@ -2,10 +2,11 @@ import { useEffect, useSyncExternalStore } from 'react'
 
 let audio: AudioContext | null = null
 
-/** Create or resume the audio context; must run inside a user gesture. */
+/** Create or resume the audio context and start loading voices; must run inside a user gesture. */
 export function unlockAudio() {
   audio ??= new AudioContext()
   if (audio.state === 'suspended') void audio.resume()
+  if ('speechSynthesis' in window) speechSynthesis.getVoices()
 }
 
 function tone(frequency: number, duration: number, delay = 0, volume = 0.22) {
