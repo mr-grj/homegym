@@ -106,6 +106,43 @@ test('recent timers start again with one click', async ({ app }) => {
   await expect(app.locator('.stage')).toHaveAttribute('data-state', 'running')
 })
 
+test('a hidden tab keeps time from a worker, which browsers do not throttle', async ({ app }) => {
+  type Probe = { created: number; ended: number; hidden: boolean }
+  await app.evaluate(() => {
+    const probe: Probe = { created: 0, ended: 0, hidden: false }
+    Object.assign(window, { probe })
+    const Native = window.Worker
+    window.Worker = class extends Native {
+      constructor(url: string | URL, options?: WorkerOptions) {
+        super(url, options)
+        probe.created++
+      }
+      terminate() {
+        probe.ended++
+        super.terminate()
+      }
+    }
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => probe.hidden })
+  })
+  const setHidden = (hidden: boolean) =>
+    app.evaluate((value) => {
+      ;(window as unknown as { probe: Probe }).probe.hidden = value
+      document.dispatchEvent(new Event('visibilitychange'))
+    }, hidden)
+  const probe = () => app.evaluate(() => (window as unknown as { probe: Probe }).probe)
+
+  await enter(app, '10s')
+  await setHidden(true)
+  expect(await probe()).toMatchObject({ created: 1, ended: 0 })
+  await setHidden(false)
+  expect(await probe()).toMatchObject({ created: 1, ended: 1 })
+  await setHidden(true)
+  await app.clock.runFor(10_500)
+  await expect(app).toHaveTitle('✓ 0:10 · Timer')
+  await expect(app.locator('.toast')).toContainText('Logged Timer · 10s')
+  expect(await probe()).toMatchObject({ created: 2, ended: 2 })
+})
+
 test.describe('with the real clock', () => {
   test.use({ fakeClock: false })
 
