@@ -16,6 +16,7 @@ function Brands() {
         <rect width="28" height="20" rx="5.5" fill="#ff0033" />
         <path d="M11 5.6v8.8l7.6-4.4z" fill="#fff" />
       </svg>
+      or
       <svg viewBox="0 0 32 16" role="img" aria-label="SoundCloud">
         <g fill="#ff5500">
           <rect x="0" y="9" width="1.6" height="6" rx="0.8" />
