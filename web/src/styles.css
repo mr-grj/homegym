@@ -441,6 +441,11 @@ kbd {
   );
 }
 
+.launcher > .routine-list:not(:has(.chip:nth-child(3))) {
+  flex-shrink: 0;
+  min-height: 0;
+}
+
 .routine-list[data-fade-top] {
   --fade-top: 24px;
 }
@@ -450,8 +455,6 @@ kbd {
 }
 
 .chips.routines {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   width: 100%;
 }
 
@@ -464,6 +467,8 @@ kbd {
 }
 
 .routines .chip {
+  flex: none;
+  width: clamp(calc(50% - 4px), (568px - 100%) * 999, 100%);
   min-width: 0;
 }
 
