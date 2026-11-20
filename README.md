@@ -136,3 +136,7 @@ cd web && npm install && npm run dev
 The dev server proxies `/api` to `localhost:8000`.
 
 **Stack:** React 19, TypeScript 7, Vite 8, FastAPI, Python 3.14, SQLite, nginx, Docker Compose.
+
+## License
+
+[MIT](LICENSE) © mr-grj
