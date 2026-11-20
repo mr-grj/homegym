@@ -298,6 +298,7 @@ kbd {
   letter-spacing: -0.045em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  height: var(--huge);
   caret-color: var(--work);
   outline: none;
   transition: font-size 0.12s ease-out;
@@ -311,11 +312,20 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  max-width: 100%;
+  height: 2em;
   color: var(--muted);
   font-size: 1.05rem;
-  padding: 6px 12px;
+  padding: 0 12px;
   border-radius: 999px;
   transition: color 0.15s;
+}
+
+.hint span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hint:hover {
@@ -498,6 +508,7 @@ kbd {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-content: flex-start;
   align-items: center;
   gap: 6px;
 }
@@ -510,7 +521,7 @@ kbd {
   gap: 6px;
 }
 
-.routine-list:has(.routines:empty) {
+.routine-list:not([data-reserved]):has(.routines:empty) {
   display: none;
 }
 

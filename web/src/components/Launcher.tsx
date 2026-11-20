@@ -34,7 +34,9 @@ const shake = [
 export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen, onEdit, onMusic }: Props) {
   const [query, setQuery] = useState('')
   const [pick, setPick] = useState(-1)
+  const [reserve, setReserve] = useState({ row: 0, list: 0 })
   const entry = useRef<HTMLDivElement>(null)
+  const row = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const [fade, setFade] = useState({ top: false, bottom: false })
   const text = query.trim()
@@ -114,6 +116,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
           aria-label="Duration or routine"
           style={{ fontSize: `calc(var(--huge) * ${Math.min(1, 5 / Math.max(5, query.length))})` }}
           onChange={(e) => {
+            if (!query) setReserve({ row: row.current?.offsetHeight ?? 0, list: list.current?.offsetHeight ?? 0 })
             setQuery(e.target.value)
             setPick(-1)
           }}
@@ -125,10 +128,10 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
             onMusic(pasted)
           }}
         />
-        <div className="entry-row">
+        <div className="entry-row" ref={row} style={text ? { minHeight: reserve.row } : undefined}>
           <button className="hint" data-invalid={(!target && !link) || undefined} onClick={submit} {...tip(target || link ? hint[0].toUpperCase() + hint.slice(1) : 'Type a duration like 25m', target || link ? '⏎' : undefined)}>
             {(target || link) && <kbd>⏎</kbd>}
-            {hint}
+            <span>{hint}</span>
           </button>
           {!text && timers.length > 0 && (
             <div className="recent-timers">
@@ -149,6 +152,8 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
       <div
         className="routine-list"
         ref={list}
+        style={text ? { minHeight: reserve.list } : undefined}
+        data-reserved={(text && reserve.list > 0) || undefined}
         onScroll={measure}
         data-fade-top={fade.top || undefined}
         data-fade-bottom={fade.bottom || undefined}
