@@ -8,9 +8,11 @@ import { advance, arm, back, countdown, extend, face, finish, jump, pause, play,
 export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean }
 
 const TICK_MS = 100
+const TICKER = 'onmessage = (e) => setInterval(() => postMessage(0), e.data)'
 
 let now = Date.now()
 const listeners = new Set<() => void>()
+let tickerUrl: string | undefined
 
 function setNow(time: number) {
   now = time
@@ -24,6 +26,46 @@ function subscribe(listener: () => void) {
 
 /** The moment the timer shows, refreshed every 100 ms while it runs. */
 export const useNow = () => useSyncExternalStore(subscribe, () => now)
+
+function pageTicker(ms: number, tick: () => void) {
+  const id = setInterval(tick, ms)
+  return () => clearInterval(id)
+}
+
+function workerTicker(ms: number, tick: () => void) {
+  let stopFallback: (() => void) | undefined
+  try {
+    tickerUrl ??= URL.createObjectURL(new Blob([TICKER], { type: 'text/javascript' }))
+    const worker = new Worker(tickerUrl)
+    worker.onmessage = tick
+    worker.onerror = () => {
+      worker.terminate()
+      stopFallback = pageTicker(ms, tick)
+    }
+    worker.postMessage(ms)
+    return () => {
+      worker.terminate()
+      stopFallback?.()
+    }
+  } catch {
+    return pageTicker(ms, tick)
+  }
+}
+
+/** Call `tick` every `ms`, from a worker while the tab is hidden because browsers throttle hidden pages' timers. */
+function every(ms: number, tick: () => void) {
+  const start = () => (document.hidden ? workerTicker(ms, tick) : pageTicker(ms, tick))
+  let stop = start()
+  const restart = () => {
+    stop()
+    stop = start()
+  }
+  document.addEventListener('visibilitychange', restart)
+  return () => {
+    document.removeEventListener('visibilitychange', restart)
+    stop()
+  }
+}
 
 const phrases = (lang?: string) =>
   lang?.startsWith('ro') ? { next: 'Urmează', done: 'Gata. Bravo!' } : { next: 'Next', done: 'Done' }
@@ -100,8 +142,7 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
   useEffect(() => {
     if (!running) return
     onTick()
-    const id = setInterval(onTick, TICK_MS)
-    return () => clearInterval(id)
+    return every(TICK_MS, onTick)
   }, [running])
 
   useEffect(() => {
