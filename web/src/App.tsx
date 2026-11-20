@@ -390,6 +390,17 @@ export default function App() {
         <span className="brand">
           <Logo />
           <span className="brand-name">homegym</span>
+          {import.meta.env.VITE_DEMO && (
+            <a
+              className="demo-badge"
+              href="https://github.com/mr-grj/homegym"
+              target="_blank"
+              rel="noreferrer"
+              {...tip('Demo: everything stays in this browser. Self-host it to sync across devices')}
+            >
+              Demo
+            </a>
+          )}
         </span>
         <div className="tools">
           {tools.map(([icon, text, key, action, on]) => (

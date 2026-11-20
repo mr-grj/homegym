@@ -46,7 +46,8 @@ export function saveSetting(key: SyncedKey, value: unknown) {
 export function flushSettings() {
   for (const [key, value] of pending) {
     clearTimeout(timers.get(key))
-    void fetch(`/api/settings/${encodeURIComponent(key)}`, {
+    if (import.meta.env.VITE_DEMO) void api.putSetting(key, value)
+    else void fetch(`/api/settings/${encodeURIComponent(key)}`, {
       method: 'PUT',
       keepalive: true,
       headers: { 'Content-Type': 'application/json' },

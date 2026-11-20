@@ -1,3 +1,5 @@
+import { demoApi } from './demo'
+
 export type RoutineRecord = { id: number; source: string; updated_at: string }
 export type SessionBlock = { name: string; done: boolean }
 export type SessionInput = {
@@ -21,7 +23,7 @@ async function request<T>(path: string, method = 'GET', body?: unknown): Promise
   return res.status === 204 ? (undefined as T) : res.json()
 }
 
-export const api = {
+const server = {
   routines: () => request<RoutineRecord[]>('/routines'),
   createRoutine: (source: string) => request<RoutineRecord>('/routines', 'POST', { source }),
   updateRoutine: (id: number, source: string) => request<RoutineRecord>(`/routines/${id}`, 'PUT', { source }),
@@ -32,3 +34,6 @@ export const api = {
   settings: () => request<Record<string, unknown>>('/settings'),
   putSetting: (key: string, value: unknown) => request<void>(`/settings/${encodeURIComponent(key)}`, 'PUT', value),
 }
+
+/** The server API, or a browser-only copy in the GitHub Pages demo build. */
+export const api = import.meta.env.VITE_DEMO ? demoApi : server
