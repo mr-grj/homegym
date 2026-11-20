@@ -14,6 +14,8 @@ const keys: [string, string][] = [
   ['⌘V', 'Paste a YouTube link → music'],
   ['/', 'Focus the input'],
   ['⌘⏎ · ⌘⇧⏎', 'Editor: save · save as new'],
+  ['⌘E', 'Editor: builder ↔ text'],
+  ['⏎ · ⌥↑  ⌥↓', 'Builder: next step · move'],
 ]
 
 const quick: [string, string][] = [

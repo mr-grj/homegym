@@ -13,14 +13,14 @@ import { tip, Tooltips } from './components/Tooltips'
 import { exitLabel, Stage } from './components/Stage'
 import { human } from './format'
 import { music, parseYouTube, useMusic, type Source } from './music'
-import { parseRoutine, type Routine } from './routine'
+import { parseRoutine, stepLibrary, type Routine } from './routine'
 import { cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
 import { advance, arm, back, extend, face, finish, jump, pause, play, stepRemaining, type Run } from './timer'
 
 export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean }
 type Panel = 'finish' | 'history' | 'help' | 'music' | { edit: RoutineRecord | null } | null
-type Toast = { id: number; text: string; undo?: () => void }
+type Toast = { id: number; text: string; undo?: () => void; key?: string }
 
 const phrases = (lang?: string) =>
   lang?.startsWith('ro') ? { next: 'Urmează', done: 'Gata. Bravo!' } : { next: 'Next', done: 'Done' }
@@ -39,9 +39,11 @@ export default function App() {
   const tunes = useMusic()
 
   const routines = useMemo(() => records.map((r) => parseRoutine(r.source, r.id)), [records])
+  const library = useMemo(() => stepLibrary(records.map((r) => r.source)), [records])
   const running = run?.since != null
 
-  const notify = (text: string, undo?: () => void) => setToast({ id: Date.now(), text, undo })
+  const notify = (text: string, undo?: () => void, key?: string) => setToast({ id: Date.now(), text, undo, key })
+  const dropEditorToast = () => setToast((t) => (t?.key === '⌘Z' ? null : t))
   const loadRoutines = () => api.routines().then(setRecords, () => notify('API unreachable. Routines not loaded'))
   const loadSessions = () => api.sessions().then(setSessions, () => {})
 
@@ -60,6 +62,10 @@ export default function App() {
       window.removeEventListener('pagehide', flushSettings)
     }
   }, [])
+
+  useEffect(() => {
+    if (!panel || typeof panel !== 'object') dropEditorToast()
+  }, [panel])
 
   useEffect(() => {
     if (!toast) return
@@ -454,6 +460,8 @@ export default function App() {
             onSave={(source) => saveRoutine(panel.edit?.id ?? null, source)}
             onSaveAsNew={saveRoutineAsNew}
             onDelete={() => panel.edit && void deleteRoutine(panel.edit)}
+            library={library}
+            onToast={(text, undo) => (text === null ? dropEditorToast() : notify(text, undo, '⌘Z'))}
           />
         </Modal>
       )}
@@ -467,9 +475,9 @@ export default function App() {
                 toast.undo?.()
                 setToast(null)
               }}
-              {...tip('Undo that', 'U')}
+              {...tip('Undo that', toast.key ?? 'U')}
             >
-              Undo <kbd>U</kbd>
+              Undo <kbd>{toast.key ?? 'U'}</kbd>
             </button>
           )}
         </div>

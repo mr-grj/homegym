@@ -17,11 +17,13 @@ export type Routine = {
   steps: Step[]
 }
 
-type Draft = Pick<Step, 'label' | 'note' | 'seconds' | 'rest'>
+export type Draft = Pick<Step, 'label' | 'note' | 'seconds' | 'rest'>
 
 const UNITS: Record<string, number> = { h: 3600, hr: 3600, m: 60, min: 60, s: 1, sec: 1 }
 const UNIT_TOKEN = /(\d+(?:[.,]\d+)?)(hr|h|min|m|sec|s)/gi
 const BARE = /^\d+(?:[.,]\d+)?$/
+const REPEAT = /(?:^|\s+)[×x*]\s*(\d+)$/i
+const SEPARATOR = /^·\s*|\s*·$/g
 
 const num = (value: string) => parseFloat(value.replace(',', '.'))
 
@@ -58,10 +60,11 @@ export function splitDuration(text: string, bareMinutes = false) {
     .split(/\s+/)
     .filter(Boolean)
   const tail = consume([...words].reverse(), bareMinutes)
-  if (tail.count) return { label: words.slice(0, -tail.count).join(' '), seconds: tail.total }
+  const clean = (part: string[]) => part.join(' ').replace(SEPARATOR, '')
+  if (tail.count) return { label: clean(words.slice(0, -tail.count)), seconds: tail.total }
   const head = consume(words, bareMinutes)
-  if (head.count) return { label: words.slice(head.count).join(' '), seconds: head.total }
-  return { label: words.join(' '), seconds: null }
+  if (head.count) return { label: clean(words.slice(head.count)), seconds: head.total }
+  return { label: clean(words), seconds: null }
 }
 
 /** Sum step durations, or null when any step is open-ended. */
@@ -74,40 +77,62 @@ export function totalSeconds(steps: Pick<Step, 'seconds'>[]): number | null {
   return total
 }
 
-/** Parse the plain-text routine format into blocks and a flat list of timed steps. */
-export function parseRoutine(source: string, id: number | null = null): Routine {
+/** One step as written in the source; `label` stays empty when none was given. */
+export type DocStep = Draft & { line: number }
+
+/** A block as written in the source, before rounds are expanded. */
+export type DocBlock = { name: string; rounds: number; steps: DocStep[]; implicit: boolean }
+
+/** The routine's structure as written, the shared model of the text and the builder. */
+export type Doc = { title: string; blocks: DocBlock[] }
+
+/** Parse routine text into its written structure, keeping empty blocks and blank labels. */
+export function parseDoc(source: string): Doc {
   let title = ''
-  const blocks: { name: string; rounds: number; steps: Draft[]; implicit: boolean }[] = []
-  for (const raw of source.split('\n')) {
-    const line = raw.trim()
+  const blocks: DocBlock[] = []
+  source.split('\n').forEach((raw, line) => {
+    const text = raw.trim()
     const current = blocks.at(-1)
-    if (!line) continue
-    if (line.startsWith('##')) {
-      const name = line.replace(/^#+/, '').trim()
-      const repeat = name.match(/\s+[×x*]\s*(\d+)$/i)
+    if (!text) return
+    if (text.startsWith('##')) {
+      const name = text.replace(/^#+/, '').trim()
+      const repeat = name.match(REPEAT)
       blocks.push({
         name: repeat ? name.slice(0, repeat.index).trim() : name,
         rounds: repeat ? Math.max(1, Number(repeat[1])) : 1,
         steps: [],
         implicit: false,
       })
-    } else if (line.startsWith('#')) {
-      title ||= line.replace(/^#+/, '').trim()
-    } else if (line.startsWith('>')) {
+    } else if (text.startsWith('#')) {
+      title ||= text.replace(/^#+/, '').trim()
+    } else if (text.startsWith('>')) {
       const step = current?.steps.at(-1)
-      if (step) step.note = [step.note, line.slice(1).trim()].filter(Boolean).join(' · ')
+      if (step) step.note = [step.note, text.slice(1).trim()].filter(Boolean).join(' · ')
     } else {
-      const rest = line.startsWith('~')
-      const { label, seconds } = splitDuration(rest ? line.slice(1) : line)
-      const step = { label: label || (rest ? 'Rest' : 'Go'), note: '', seconds, rest }
+      const rest = text.startsWith('~')
+      const step = { ...splitDuration(rest ? text.slice(1) : text), note: '', rest, line }
       if (!current || (current.implicit && !rest)) blocks.push({ name: step.label, rounds: 1, steps: [step], implicit: true })
       else current.steps.push(step)
     }
-  }
-  const used = blocks.filter((block) => block.steps.length)
+  })
+  return { title, blocks }
+}
+
+const stepLabel = (step: Draft) => step.label || (step.rest ? 'Rest' : 'Go')
+
+/** Parse the plain-text routine format into blocks and a flat list of timed steps. */
+export function parseRoutine(source: string, id: number | null = null): Routine {
+  const doc = parseDoc(source)
+  const used = doc.blocks
+    .filter((block) => block.steps.length)
+    .map((block, index) => ({
+      ...block,
+      name: block.name || (block.implicit ? stepLabel(block.steps[0]) : `Block ${index + 1}`),
+      steps: block.steps.map(({ line, ...step }) => ({ ...step, label: stepLabel(step) })),
+    }))
   return {
     id,
-    title: title || used[0]?.name || 'Untitled',
+    title: doc.title || used[0]?.name || 'Untitled',
     lang: /[ăâîșțşţ]/i.test(source) ? 'ro-RO' : undefined,
     quick: false,
     blocks: used.map((block) => {
@@ -120,6 +145,97 @@ export function parseRoutine(source: string, id: number | null = null): Routine 
       ).flat(),
     ),
   }
+}
+
+/** Write seconds the way people type them: 45s, 2m, 1h or 1:30. */
+export function durationText(seconds: number): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  if (seconds < 60) return `${seconds}s`
+  if (!m && !s) return `${h}h`
+  if (!h && !s) return `${m}m`
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
+}
+
+/** Read a duration field: bare numbers are seconds, empty or "open" means no limit, undefined if unreadable. */
+export function readDuration(text: string): number | null | undefined {
+  const value = text.trim().toLowerCase()
+  if (!value || value === 'open') return null
+  if (BARE.test(value)) return Math.round(num(value)) || null
+  const { label, seconds } = splitDuration(value)
+  return label || seconds === null ? undefined : seconds || null
+}
+
+const tidy = (text: string) => text.trim().replace(/\s+/g, ' ')
+
+/** True when a step would be written to the text; blank exercises without a duration are skipped. */
+export const written = (step: Draft) => step.rest || !!tidy(step.label) || step.seconds !== null
+
+function stepLine(step: Draft) {
+  const label = tidy(step.label)
+  const time = step.seconds === null ? '' : durationText(step.seconds)
+  const shapes = (text: string) => (time ? [`${text} ${time}`.trim(), `${text} · ${time}`] : [text, `${text} ·`])
+  const fits = (line: string) => {
+    if (!step.rest && /^[#>~]/.test(line)) return false
+    const read = splitDuration(line)
+    return read.label === label && read.seconds === step.seconds
+  }
+  const options = [...shapes(label), ...shapes(`· ${label}`)]
+  const line = options.find(fits) ?? options[0]
+  return step.rest ? `~ ${line}`.trim() : line
+}
+
+function blockLine(block: Pick<DocBlock, 'name' | 'rounds'>) {
+  const name = tidy(block.name)
+  const rounds = block.rounds > 1 || REPEAT.test(name) ? `×${block.rounds}` : ''
+  return ['##', name, rounds].filter(Boolean).join(' ')
+}
+
+/** Write a routine structure back to the plain-text format. */
+export function serializeDoc(doc: { title: string; blocks: (Omit<DocBlock, 'steps'> & { steps: Draft[] })[] }): string {
+  const parts: string[] = []
+  const title = tidy(doc.title)
+  if (title) parts.push(`# ${title}`)
+  let bare = true
+  for (const [index, block] of doc.blocks.entries()) {
+    const steps = block.steps.filter(written)
+    if (!steps.length && !tidy(block.name)) continue
+    const [first, ...others] = steps
+    bare &&=
+      block.implicit &&
+      block.rounds === 1 &&
+      !!first &&
+      (!first.rest || index === 0) &&
+      tidy(block.name) === tidy(first.label) &&
+      others.every((step) => step.rest)
+    const lines = steps.flatMap((step) => [stepLine(step), ...(tidy(step.note) ? [`> ${tidy(step.note)}`] : [])])
+    parts.push((bare ? lines : [blockLine(block), ...lines]).join('\n'))
+  }
+  return parts.join('\n\n') + '\n'
+}
+
+/** Steps used across routines, most used first, each with its most common duration and note. */
+export function stepLibrary(sources: string[]): Draft[] {
+  const seen = new Map<string, { uses: number; shapes: Map<string, { step: Draft; uses: number }> }>()
+  for (const source of sources)
+    for (const block of parseDoc(source).blocks)
+      for (const { line, ...step } of block.steps) {
+        const label = tidy(step.label)
+        if (!label) continue
+        const key = `${step.rest}|${fold(label)}`
+        const entry = seen.get(key) ?? { uses: 0, shapes: new Map() }
+        const shape = `${step.seconds}|${tidy(step.note)}`
+        const known = entry.shapes.get(shape) ?? { step: { ...step, label, note: tidy(step.note) }, uses: 0 }
+        known.uses++
+        entry.uses++
+        entry.shapes.set(shape, known)
+        seen.set(key, entry)
+      }
+  return [...seen.values()]
+    .sort((a, b) => b.uses - a.uses)
+    .map((entry) => [...entry.shapes.values()].reduce((best, shape) => (shape.uses > best.uses ? shape : best)).step)
 }
 
 /** Build a one-step timer from input like "25m", "1:30 plank" or "" (stopwatch); null if unparseable. */

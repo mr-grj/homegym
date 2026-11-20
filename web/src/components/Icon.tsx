@@ -35,6 +35,13 @@ const icons = {
   list: <path d="M4 6h11M4 12h11M4 18h7M17 18V9l4 1.5M17 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />,
   link: <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />,
   minimize: <path d="M6 9l6 6 6-6" />,
+  minus: <path d="M5 12h14" />,
+  copy: <path d="M9 9h10v10H9zM15 9V5H5v10h4" />,
+  grip: (
+    <g {...solid}>
+      {[6, 12, 18].flatMap((y) => [9, 15].map((x) => <circle key={`${x}${y}`} cx={x} cy={y} r="1.5" />))}
+    </g>
+  ),
 }
 
 export type IconName = keyof typeof icons

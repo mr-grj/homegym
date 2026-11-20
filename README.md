@@ -16,7 +16,7 @@
 ## Features
 
 - **Instant timers.** Type `25m`, `1:30` or `5m plank` into the big clock and press Enter. An empty Enter starts a stopwatch.
-- **Plain-text routines.** Blocks, rounds, rests and notes in a format you can write in a minute. The editor shows a live preview as you type.
+- **Routines your way.** Build them with fields (pick an exercise you used before, tap a duration, drag to reorder) or write them as plain text. Both show a live preview as you go.
 - **Readable from across the room.** Huge digits, colour-coded work and rest phases, a progress fill and a timeline of the whole routine.
 - **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and a voice that reads out the next exercise. The screen stays awake.
 - **Music that follows the timer.** Paste a YouTube Music link: it plays when you start, pauses when you pause, gets quieter for the countdown and fades out at the end. Each playlist resumes where you left off.
@@ -30,7 +30,7 @@
     <td><img src="docs/screenshots/finish.png" alt="Finish sheet with completed blocks, effort rating and notes"></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/editor.png" alt="Routine editor with live preview"></td>
+    <td><img src="docs/screenshots/editor.png" alt="Routine builder with blocks, steps and a live preview"></td>
     <td><img src="docs/screenshots/history.png" alt="History grouped by day with totals"></td>
   </tr>
 </table>
@@ -70,12 +70,21 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 | `M` · `[` · `]` | Music: play/pause, previous, next |
 | `H` · `?` | History · all shortcuts |
 | `⌘⏎` · `⌘⇧⏎` | In the editor: save · save as a new routine |
+| `⌘E` | In the editor: switch between builder and text |
+| `⏎` · `⌥↑` `⌥↓` | In the builder: add the next step · move a step or block |
 
 Quick timers are logged automatically. Routines end with a short finish sheet. Anything you delete can be undone for a few seconds.
 
 ## Routines
 
-A routine is plain text:
+Press **+ Routine** and build it in the **Builder**:
+
+- Type an exercise name and pick a duration. Names you've used in other routines are suggested, and picking one fills in its usual duration and note.
+- `⏎` adds the next step, the dot switches between exercise and rest, and `−` `+` set how many times a block repeats.
+- Drag the handle (or press `⌥↑` `⌥↓`) to move steps and blocks. Removing something shows an undo, and `⌘Z` works too.
+- Click any step in the preview to jump to it.
+
+Prefer typing? Switch to **Text** (`⌘E`). Both edit the same routine, and the editor remembers your choice on each device. A routine is plain text:
 
 ```text
 # Core (10 min)
@@ -101,7 +110,7 @@ Hollow hold 30s
 | `> text` | A note shown under the current step |
 | `Exercise` | No duration: runs until you press `→` |
 
-The [`examples/`](examples) folder has ready-made routines for strength, HIIT, mobility, breathing and focused work. Copy one into **+ Routine** and adjust it.
+The [`examples/`](examples) folder has ready-made routines for strength, HIIT, mobility, breathing and focused work. Paste one into **+ Routine** in the Text view and adjust it in either view.
 
 To make a variation of a routine, open it, change what you need and press **Save as new** (`⌘⇧⏎`). The original stays as it was, and the copy is named for you ("Full body (20 min) copy") unless you give it a new title.
 
