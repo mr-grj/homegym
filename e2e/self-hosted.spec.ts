@@ -1,0 +1,33 @@
+import { enter, expect, shortcut, test } from './fixtures'
+
+test.skip(!process.env.SELF_HOSTED_URL, 'needs SELF_HOSTED_URL pointing at a throwaway stack')
+test.use({ fakeClock: false })
+
+test('routines, history and settings live on the server', async ({ app, browser, request }) => {
+  await app.locator('.chip.ghost', { hasText: 'Routine' }).click()
+  await app.keyboard.type('Server day')
+  await app.keyboard.press('Enter')
+  await app.keyboard.type('Main')
+  await app.keyboard.press('Enter')
+  await app.keyboard.type('Plank')
+  await app.keyboard.press('ControlOrMeta+Enter')
+  await expect(app.locator('.chip-main', { hasText: 'Server day' })).toBeVisible()
+
+  await enter(app, '1s')
+  await expect(app.locator('.toast')).toContainText('Logged Timer · 1s')
+  await shortcut(app, 'Escape')
+  await shortcut(app, 's')
+  await expect(app.locator('[data-tool=mute]')).toBeVisible()
+
+  await expect.poll(async () => (await (await request.get('api/settings')).json())['homegym.prefs']?.sound).toBe(false)
+  const routines: { source: string }[] = await (await request.get('api/routines')).json()
+  expect(routines.some((r) => r.source.startsWith('# Server day'))).toBe(true)
+  const sessions: { title: string; seconds: number }[] = await (await request.get('api/sessions')).json()
+  expect(sessions[0]).toMatchObject({ title: 'Timer', seconds: 1 })
+
+  const other = await browser.newPage()
+  await other.goto('./')
+  await expect(other.locator('.chip-main', { hasText: 'Server day' })).toBeVisible()
+  await expect(other.locator('[data-tool=mute]')).toHaveAttribute('data-off')
+  await other.close()
+})
