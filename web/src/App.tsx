@@ -11,15 +11,16 @@ import { Modal } from './components/Modal'
 import { MusicDock, MusicPicker } from './components/Music'
 import { tip, Tooltips } from './components/Tooltips'
 import { exitLabel, Stage } from './components/Stage'
+import { VoicePicker } from './components/Voice'
 import { human } from './format'
 import { music, parseYouTube, useMusic, type Source } from './music'
 import { parseRoutine, stepLibrary, type Routine } from './routine'
-import { cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
+import { baseLang, cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
 import { advance, arm, back, extend, face, finish, jump, pause, play, stepRemaining, type Run } from './timer'
 
 export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean }
-type Panel = 'finish' | 'history' | 'help' | 'music' | { edit: RoutineRecord | null } | null
+type Panel = 'finish' | 'history' | 'help' | 'music' | 'voice' | { edit: RoutineRecord | null } | null
 type Toast = { id: number; text: string; undo?: () => void; key?: string }
 
 const phrases = (lang?: string) =>
@@ -31,6 +32,7 @@ export default function App() {
   const [run, setRun] = usePersistent<Run | null>('homegym.run', null)
   const [prefs, setPrefs] = useSetting<Prefs>('homegym.prefs', { sound: true, voice: true, elapsed: false })
   const [recent, setRecent] = useSetting<string[]>('homegym.recent', [])
+  const [voices, setVoices] = usePersistent<Record<string, string>>('homegym.voices', {})
   const [panel, setPanel] = useState<Panel>(null)
   const [toast, setToast] = useState<Toast | null>(null)
   const [now, setNow] = useState(() => Date.now())
@@ -40,6 +42,11 @@ export default function App() {
 
   const routines = useMemo(() => records.map((r) => parseRoutine(r.source, r.id)), [records])
   const library = useMemo(() => stepLibrary(records.map((r) => r.source)), [records])
+  const langs = useMemo(() => {
+    const found = new Map([['en', 'en']])
+    for (const r of routines) if (r.lang && !found.has(baseLang(r.lang))) found.set(baseLang(r.lang), r.lang)
+    return [...found.values()]
+  }, [routines])
   const running = run?.since != null
 
   const notify = (text: string, undo?: () => void, key?: string) => setToast({ id: Date.now(), text, undo, key })
@@ -90,6 +97,8 @@ export default function App() {
     document.title = `${run.finishedAt ? '✓' : run.since === null ? '❚❚' : '▶'} ${f.display} · ${f.step.label}`
   }, [run, now, prefs.elapsed])
 
+  const say = (text: string, lang?: string) => speak(text, lang, voices[baseLang(lang)])
+
   const announce = (next: Run) => {
     const step = next.steps[next.index]
     if (prefs.sound) (step.rest ? cue.rest : cue.work)()
@@ -98,7 +107,7 @@ export default function App() {
     music.duck(2800)
     const after = next.steps[next.index + 1]
     const text = step.rest && after ? `${step.label}. ${phrases(next.routine.lang).next}: ${after.label}` : step.label
-    setTimeout(() => speak(text, next.routine.lang), 350)
+    setTimeout(() => say(text, next.routine.lang), 350)
   }
 
   const logQuick = async (done: Run, minimum = 1) => {
@@ -138,7 +147,7 @@ export default function App() {
     if (music.state.follow) music.fadeOut()
     if (prefs.sound) cue.done()
     vibrate([200, 100, 200, 100, 400])
-    if (prefs.voice) speak(phrases(done.routine.lang).done, done.routine.lang)
+    if (prefs.voice) say(phrases(done.routine.lang).done, done.routine.lang)
     if (done.routine.quick) void logQuick(done)
     else setPanel('finish')
   }
@@ -378,7 +387,7 @@ export default function App() {
   const tools: [IconName, string, string, () => void, boolean?][] = [
     ['music', tunes.source ? 'Change music' : 'Add music: paste a YouTube Music link', '⌘V', () => setPanel('music'), !!tunes.source || undefined],
     [prefs.sound ? 'sound' : 'mute', `Beeps and chimes ${prefs.sound ? 'on' : 'off'}`, 'S', () => flip('sound'), prefs.sound],
-    ['voice', `Voice reads each exercise ${prefs.voice ? '(on)' : '(off)'}`, 'V', () => flip('voice'), prefs.voice],
+    ['voice', `Voice ${prefs.voice ? 'on' : 'off'}: pick how it sounds`, 'V', () => setPanel('voice'), prefs.voice],
     ['expand', 'Fullscreen', 'F', fullscreen],
     ['history', 'History: everything you logged', 'H', () => setPanel('history')],
     ['help', 'Shortcuts and formats', '?', () => setPanel('help')],
@@ -456,6 +465,17 @@ export default function App() {
       {panel === 'music' && (
         <Modal onClose={() => setPanel(null)}>
           <MusicPicker onDone={() => setPanel(null)} />
+        </Modal>
+      )}
+      {panel === 'voice' && (
+        <Modal onClose={() => setPanel(null)}>
+          <VoicePicker
+            on={prefs.voice}
+            langs={langs}
+            chosen={voices}
+            onToggle={() => flip('voice')}
+            onChoose={(lang, name) => setVoices((v) => ({ ...v, [lang]: name ?? '' }))}
+          />
         </Modal>
       )}
       {panel === 'help' && (
