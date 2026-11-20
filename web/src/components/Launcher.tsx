@@ -5,6 +5,7 @@ import { parseMusic, type Source } from '../music'
 import { fold, quickRoutine, totalSeconds, type Routine } from '../routine'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
+import { useScrollFade } from './useScrollFade'
 
 type Props = {
   routines: Routine[]
@@ -37,8 +38,8 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
   const [reserve, setReserve] = useState({ row: 0, list: 0 })
   const entry = useRef<HTMLDivElement>(null)
   const row = useRef<HTMLDivElement>(null)
-  const list = useRef<HTMLDivElement>(null)
-  const [fade, setFade] = useState({ top: false, bottom: false })
+  const scroll = useScrollFade<HTMLDivElement>()
+  const list = scroll.ref
   const text = query.trim()
   const quick = quickRoutine(text)
   const matches = routines.filter((r) => fold(r.title).includes(fold(text)))
@@ -60,23 +61,6 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
   const timers = recent.flatMap((t) => recentTimer(t) ?? []).slice(0, 4)
   const today = sessions.filter((s) => dayKey(s.started_at) === dayKey(new Date().toISOString()))
   const todaySeconds = today.reduce((sum, s) => sum + s.seconds, 0)
-
-  const measure = () => {
-    const el = list.current
-    if (!el) return
-    const top = el.scrollTop > 2
-    const bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 2
-    setFade((f) => (f.top === top && f.bottom === bottom ? f : { top, bottom }))
-  }
-
-  useEffect(() => {
-    const el = list.current
-    if (!el) return
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    observer.observe(el.firstElementChild!)
-    return () => observer.disconnect()
-  }, [])
 
   useEffect(() => {
     list.current?.querySelector('[data-active]')?.scrollIntoView({ block: 'nearest' })
@@ -151,12 +135,9 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
 
       <div
         className="routine-list"
-        ref={list}
+        {...scroll}
         style={text ? { minHeight: reserve.list } : undefined}
         data-reserved={(text && reserve.list > 0) || undefined}
-        onScroll={measure}
-        data-fade-top={fade.top || undefined}
-        data-fade-bottom={fade.bottom || undefined}
       >
         <div className="chips routines">
           {matches.map((r) => {
