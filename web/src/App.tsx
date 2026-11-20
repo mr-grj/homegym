@@ -13,7 +13,7 @@ import { tip, Tooltips } from './components/Tooltips'
 import { exitLabel, Stage } from './components/Stage'
 import { VoicePicker } from './components/Voice'
 import { human } from './format'
-import { music, parseYouTube, useMusic, type Source } from './music'
+import { music, parseMusic, resolveSource, useMusic, type Source } from './music'
 import { parseRoutine, stepLibrary, type Routine } from './routine'
 import { baseLang, cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
@@ -136,7 +136,13 @@ export default function App() {
     else music.pause()
   }
 
-  const loadMusic = (source: Source) => {
+  const loadMusic = async (link: Source) => {
+    let source: Source
+    try {
+      source = await resolveSource(link)
+    } catch (e) {
+      return notify((e as Error).message)
+    }
     const autoplay = running && music.state.follow
     music.load(source, autoplay)
     setPanel((p) => (p === 'music' ? null : p))
@@ -368,10 +374,10 @@ export default function App() {
 
   const onPaste = useEffectEvent((e: ClipboardEvent) => {
     if (e.target instanceof Element && e.target.closest('input, textarea')) return
-    const source = parseYouTube(e.clipboardData?.getData('text') ?? '')
+    const source = parseMusic(e.clipboardData?.getData('text') ?? '')
     if (!source) return
     e.preventDefault()
-    loadMusic(source)
+    void loadMusic(source)
   })
 
   useEffect(() => {
@@ -385,7 +391,7 @@ export default function App() {
 
   const phase = !run ? 'idle' : run.finishedAt ? 'done' : run.steps[run.index].rest ? 'rest' : 'work'
   const tools: [IconName, string, string, () => void, boolean?][] = [
-    ['music', tunes.source ? 'Change music' : 'Add music: paste a YouTube Music link', '⌘V', () => setPanel('music'), !!tunes.source || undefined],
+    ['music', tunes.source ? 'Change music' : 'Add music: paste a YouTube or SoundCloud link', '⌘V', () => setPanel('music'), !!tunes.source || undefined],
     [prefs.sound ? 'sound' : 'mute', `Beeps and chimes ${prefs.sound ? 'on' : 'off'}`, 'S', () => flip('sound'), prefs.sound],
     ['voice', `Voice ${prefs.voice ? 'on' : 'off'}: pick how it sounds`, 'V', () => setPanel('voice'), prefs.voice],
     ['expand', 'Fullscreen', 'F', fullscreen],

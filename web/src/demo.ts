@@ -116,4 +116,5 @@ export const demoApi = {
     change((data) => {
       data.settings[key] = value
     }),
+  resolveLink: (_url: string): Promise<{ url: string }> => Promise.reject(new Error('Short links need the server')),
 }

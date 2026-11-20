@@ -33,6 +33,7 @@ const server = {
   deleteSession: (id: number) => request<void>(`/sessions/${id}`, 'DELETE'),
   settings: () => request<Record<string, unknown>>('/settings'),
   putSetting: (key: string, value: unknown) => request<void>(`/settings/${encodeURIComponent(key)}`, 'PUT', value),
+  resolveLink: (url: string) => request<{ url: string }>(`/music/resolve?url=${encodeURIComponent(url)}`),
 }
 
 /** The server API, or a browser-only copy in the GitHub Pages demo build. */

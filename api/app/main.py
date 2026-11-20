@@ -1,7 +1,9 @@
 """homegym API: stores routines, the session log and synced settings."""
 
+import http.client
 import json
 import os
+import re
 import sqlite3
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
@@ -9,13 +11,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, Path as Param, Response
+from fastapi import Body, FastAPI, HTTPException, Path as Param, Query, Response
 from pydantic import BaseModel, Field
 
 DB_PATH = Path(os.environ.get("HOMEGYM_DB", "homegym.db"))
 SEED = Path(__file__).with_name("seed.txt")
 SCHEMA_VERSION = 2
 MAX_SETTING_BYTES = 200_000
+SHORT_LINK = re.compile(r"https://on\.soundcloud\.com/(\w+)")
+FULL_LINK = re.compile(r"https://(?:www\.|m\.)?soundcloud\.com/\S+")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS routines (
@@ -214,6 +218,25 @@ def put_setting(
             (key, encoded, utcnow()),
         )
     return Response(status_code=204)
+
+
+@app.get("/api/music/resolve")
+def resolve_link(url: str = Query(max_length=200)) -> dict[str, str]:
+    """Expand an on.soundcloud.com short link, which browsers cannot follow across origins."""
+    match = SHORT_LINK.fullmatch(url)
+    if not match:
+        raise HTTPException(400, "Only on.soundcloud.com links")
+    conn = http.client.HTTPSConnection("on.soundcloud.com", timeout=5)
+    try:
+        conn.request("HEAD", f"/{match[1]}")
+        location = conn.getresponse().getheader("Location", "")
+    except OSError as error:
+        raise HTTPException(502, "SoundCloud is unreachable") from error
+    finally:
+        conn.close()
+    if not FULL_LINK.fullmatch(location):
+        raise HTTPException(404, "Unknown short link")
+    return {"url": location}
 
 
 @app.delete("/api/sessions/{session_id}", status_code=204)

@@ -11,7 +11,7 @@ const keys: [string, string][] = [
   ['U', 'Undo'],
   ['M', 'Play · pause music'],
   ['[  ]', 'Previous · next track'],
-  ['⌘V', 'Paste a YouTube link → music'],
+  ['⌘V', 'Paste a YouTube or SoundCloud link → music'],
   ['/', 'Focus the input'],
   ['⌘⏎ · ⌘⇧⏎', 'Editor: save · save as new'],
   ['⌘E', 'Editor: builder ↔ text'],

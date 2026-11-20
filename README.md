@@ -24,7 +24,7 @@
 - **Routines your way.** Build them with fields (pick an exercise you used before, tap a duration, drag to reorder) or write them as plain text. Both show a live preview as you go.
 - **Readable from across the room.** Huge digits, colour-coded work and rest phases, a progress fill and a timeline of the whole routine.
 - **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and a voice that reads out the next exercise, using the most natural voice your device has or one you pick. The screen stays awake.
-- **Music that follows the timer.** Paste a YouTube Music link: it plays when you start, pauses when you pause, gets quieter for the countdown and fades out at the end. Each playlist resumes where you left off.
+- **Music that follows the timer.** Paste a YouTube Music or SoundCloud link: it plays when you start, pauses when you pause, gets quieter for the countdown and fades out at the end. Each playlist resumes where you left off.
 - **A log you'll actually keep.** At the end of a workout, tick the blocks you finished, rate the effort and add a note. History shows daily totals.
 - **Keyboard first, phone friendly.** Every action has a shortcut and a tooltip, and the layout adapts to small screens.
 - **Self-hosted.** One `docker compose up`. Routines, history and settings live in SQLite and sync across your devices.
@@ -62,7 +62,7 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 | `5m plank` | Countdown with a label |
 | Nothing | Stopwatch |
 | Part of a routine name | Opens that routine |
-| A YouTube Music link | Loads the music |
+| A YouTube Music or SoundCloud link | Loads the music |
 
 | Key | Action |
 | --- | --- |
@@ -121,9 +121,9 @@ To make a variation of a routine, open it, change what you need and press **Save
 
 ## Music
 
-Copy a share link from YouTube Music (a playlist, album or song) and press `⌘V` anywhere in homegym. If you're signed in to YouTube in the same browser, the player uses your account, so Premium means no ads.
+Copy a share link from YouTube Music or SoundCloud (a playlist, album, artist or song) and press `⌘V` anywhere in homegym. If you're signed in to YouTube in the same browser, the player uses your account, so Premium means no ads.
 
-Private playlists, including Liked Music, can't be embedded. Use a public or unlisted playlist instead.
+Private YouTube playlists, including Liked Music, can't be embedded. Use a public or unlisted playlist instead. SoundCloud plays only a 30 second preview of Go+ tracks, and its short `on.soundcloud.com` links work in the self-hosted app but not in the demo.
 
 ## Data and backups
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import type { Session } from '../api'
 import { clock, dayKey, human } from '../format'
-import { parseYouTube, type Source } from '../music'
+import { parseMusic, type Source } from '../music'
 import { fold, quickRoutine, totalSeconds, type Routine } from '../routine'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
@@ -43,7 +43,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
   const quick = quickRoutine(text)
   const matches = routines.filter((r) => fold(r.title).includes(fold(text)))
   const routine = pick >= 0 ? matches[pick] : quick ? undefined : matches[0]
-  const link = parseYouTube(text)
+  const link = parseMusic(text)
   const target = routine ? { kind: 'routine' as const, routine } : quick && { kind: 'quick' as const, routine: quick }
   const seconds = target?.routine.steps[0].seconds
 
@@ -122,7 +122,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
           }}
           onKeyDown={onKeyDown}
           onPaste={(e) => {
-            const pasted = parseYouTube(e.clipboardData.getData('text'))
+            const pasted = parseMusic(e.clipboardData.getData('text'))
             if (!pasted) return
             e.preventDefault()
             onMusic(pasted)
