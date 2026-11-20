@@ -81,6 +81,17 @@ describe('synced settings', () => {
     expect(readLocal('homegym.recent', null)).toEqual(['new'])
   })
 
+  test('a failed flush stays pending too', async () => {
+    const { saveSetting, flushSettings, pullSettings, readLocal } = await load()
+    failPuts = true
+    saveSetting('homegym.recent', ['new'])
+    flushSettings()
+    await flush()
+    remote = { 'homegym.recent': ['old'] }
+    await pullSettings()
+    expect(readLocal('homegym.recent', null)).toEqual(['new'])
+  })
+
   test('pull applies server values and tells listeners', async () => {
     const { pullSettings, onRemoteSetting, readLocal } = await load()
     const heard: unknown[] = []

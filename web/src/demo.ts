@@ -1,4 +1,4 @@
-import type { RoutineRecord, Session, SessionInput } from './api'
+import type { Api, RoutineRecord, Session, SessionInput } from './api'
 import { parseRoutine } from './routine'
 
 type Data = { next: number; routines: RoutineRecord[]; sessions: Session[]; settings: Record<string, unknown> }
@@ -81,7 +81,7 @@ function routineFor(source: string, id: number): RoutineRecord {
 }
 
 /** The API, kept in this browser's localStorage and seeded with the example routines. */
-export const demoApi = {
+export const demoApi: Api = {
   routines: () => reply(load().routines),
   createRoutine: (source: string) =>
     change((data) => {
@@ -116,5 +116,5 @@ export const demoApi = {
     change((data) => {
       data.settings[key] = value
     }),
-  resolveLink: (_url: string): Promise<{ url: string }> => Promise.reject(new Error('Short links need the server')),
+  resolveLink: () => Promise.reject(new Error('Short links need the server')),
 }

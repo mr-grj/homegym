@@ -24,12 +24,12 @@ function writeLocal(key: string, value: unknown) {
   } catch {}
 }
 
-function push(key: string) {
+function push(key: string, keepalive = false) {
   clearTimeout(timers.get(key))
   if (!pending.has(key)) return
   const value = pending.get(key)
   pending.delete(key)
-  api.putSetting(key, value).catch(() => {
+  api.putSetting(key, value, keepalive).catch(() => {
     if (!pending.has(key)) pending.set(key, value)
   })
 }
@@ -44,17 +44,7 @@ export function saveSetting(key: SyncedKey, value: unknown) {
 
 /** Send unsaved settings immediately; survives the tab closing. */
 export function flushSettings() {
-  for (const [key, value] of pending) {
-    clearTimeout(timers.get(key))
-    if (import.meta.env.VITE_DEMO) void api.putSetting(key, value)
-    else void fetch(`/api/settings/${encodeURIComponent(key)}`, {
-      method: 'PUT',
-      keepalive: true,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(value),
-    })
-  }
-  pending.clear()
+  for (const key of pending.keys()) push(key, true)
 }
 
 /** Fetch server settings, apply them, and upload any this server has never seen. */
