@@ -255,6 +255,14 @@ export function quickRoutine(text: string): Routine | null {
 /** Fold case and diacritics for forgiving search. */
 export const fold = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
+const timerKey = (text: string) => {
+  const routine = quickRoutine(text)
+  return routine ? `${routine.steps[0].seconds} ${fold(routine.title)}` : fold(text.trim())
+}
+
+/** Recent timer texts without repeats, newest first: `5m`, `5:00` and `300s` start the same timer. */
+export const uniqueTimers = (list: string[]) => list.filter((text, i) => list.findIndex((other) => timerKey(other) === timerKey(text)) === i)
+
 /** Return `title` if free, otherwise the first free "title copy", "title copy 2", and so on. */
 export function uniqueTitle(title: string, taken: string[]): string {
   const used = new Set(taken.map((t) => fold(t.trim())))

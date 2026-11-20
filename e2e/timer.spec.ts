@@ -106,6 +106,24 @@ test('recent timers start again with one click', async ({ app }) => {
   await expect(app.locator('.stage')).toHaveAttribute('data-state', 'running')
 })
 
+test('recent timers show the newest three, each once, on one line', async ({ app }) => {
+  const chips = app.locator('.recent-timer')
+  const long = '1h 15m deep work on the quarterly planning document'
+  for (const text of ['300s', long, '5:00']) {
+    await enter(app, text)
+    await shortcut(app, 'Escape')
+    await expect(app.locator('.launcher')).toBeVisible()
+  }
+  await expect(chips).toHaveText(['5:00', '1:15:00 deep work on the quarterly planning document', '25:00 focus'])
+  const tops = await chips.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top))
+  expect(new Set(tops).size).toBe(1)
+
+  await app.setViewportSize({ width: 320, height: 640 })
+  expect(await app.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)
+  await chips.nth(1).click()
+  await expect(app.locator('.time')).toHaveText('1:15:00')
+})
+
 test('a hidden tab keeps time from a worker, which browsers do not throttle', async ({ app }) => {
   type Probe = { created: number; ended: number; hidden: boolean }
   await app.evaluate(() => {

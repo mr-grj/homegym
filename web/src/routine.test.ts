@@ -11,6 +11,7 @@ import {
   splitDuration,
   stepLibrary,
   totalSeconds,
+  uniqueTimers,
   uniqueTitle,
   withTitle,
   type Doc,
@@ -202,6 +203,10 @@ describe('quickRoutine', () => {
   test.each(['abc', 'Full body', '0'])('%j is not a timer', (text) => {
     expect(quickRoutine(text)).toBeNull()
   })
+})
+
+test('uniqueTimers keeps the newest of each timer', () => {
+  expect(uniqueTimers(['5:00', '25m focus', '5m', '300s', '1:30', '25:00 Focus', '5m plank'])).toEqual(['5:00', '25m focus', '1:30', '5m plank'])
 })
 
 describe('library and titles', () => {

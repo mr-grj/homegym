@@ -14,7 +14,7 @@ import { exitLabel, Stage } from './components/Stage'
 import { VoicePicker } from './components/Voice'
 import { human } from './format'
 import { music, parseMusic, resolveSource, useMusic, type Source } from './music'
-import { parseRoutine, stepLibrary, type Routine } from './routine'
+import { parseRoutine, stepLibrary, uniqueTimers, type Routine } from './routine'
 import { baseLang } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
 import { arm, totalElapsed, type Run } from './timer'
@@ -115,7 +115,7 @@ export default function App() {
 
   const startQuick = (routine: Routine, text: string) => {
     workout.startQuick(routine)
-    if (text) setRecent((list) => [text, ...list.filter((x) => x !== text)].slice(0, 6))
+    if (text) setRecent((list) => uniqueTimers([text, ...list]).slice(0, 6))
   }
 
   const saveWorkout = async (form: FinishForm) => {
