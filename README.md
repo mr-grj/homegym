@@ -140,10 +140,11 @@ docker compose cp api:/data/homegym.db ./homegym-backup-$(date +%F).db
 ```text
 api/        FastAPI + SQLite (routines, sessions, settings)
 web/        React + TypeScript + Vite, served by nginx
+e2e/        Playwright tests, run against the browser-only demo build
 examples/   Example routines
 ```
 
-Run each side locally with hot reload:
+Run each side locally with hot reload. You need [uv](https://docs.astral.sh/uv/) and Node 22.12+.
 
 ```sh
 cd api && uv run uvicorn app.main:app --reload
@@ -151,6 +152,16 @@ cd web && npm install && npm run dev
 ```
 
 The dev server proxies `/api` to `localhost:8000`.
+
+Tests, the same ones CI runs:
+
+```sh
+cd api && uv run pytest && uv run ruff check . && uv run mypy app tests
+cd web && npm install && npm test && npm run build
+cd e2e && npm install && npx playwright install chromium && npm test
+```
+
+The end-to-end tests build the demo and drive it with a fake clock, so no server is needed. Set `SELF_HOSTED_URL` to also run one test against a running stack. It writes to that stack, so point it at a throwaway one.
 
 **Stack:** React 19, TypeScript 7, Vite 8, FastAPI, Python 3.14, SQLite, nginx, Docker Compose.
 
