@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/workout.png" alt="A workout in progress: big countdown, current exercise, notes and a timeline of every block" width="900">
+  <a href="https://mr-grj.github.io/homegym/"><img src="docs/demo.webp" alt="A walk through homegym: routine previews, a quick timer, music from a pasted link, a routine with notes and rest phases, the finish sheet, building a routine, history and shortcuts" width="900"></a>
 </p>
 
 ## Features
@@ -28,17 +28,6 @@
 - **A log you'll actually keep.** At the end of a workout, tick the blocks you finished, rate the effort and add a note. History shows daily totals.
 - **Keyboard first, phone friendly.** Every action has a shortcut and a tooltip, and the layout adapts to small screens.
 - **Self-hosted.** One `docker compose up`. Routines, history and settings live in SQLite and sync across your devices.
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/launcher.png" alt="Start screen with quick timers and routines"></td>
-    <td><img src="docs/screenshots/finish.png" alt="Finish sheet with completed blocks, effort rating and notes"></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/editor.png" alt="Routine builder with blocks, steps and a live preview"></td>
-    <td><img src="docs/screenshots/history.png" alt="History grouped by day with totals"></td>
-  </tr>
-</table>
 
 ## Quick start
 

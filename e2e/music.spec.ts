@@ -80,6 +80,21 @@ test('the demo suggests a playlist without loading SoundCloud', async ({ app }) 
   expect(calls).toEqual([])
 })
 
+for (const follow of [true, false]) {
+  test(`music picked during a run ${follow ? 'starts with it' : 'waits when it does not follow the timer'}`, async ({ app }) => {
+    await app.locator('.chip-main', { hasText: 'Core' }).click()
+    await shortcut(app, 'Space')
+    await app.locator('[data-tool=music]').click()
+    const picker = app.locator('.music-picker')
+    if (!follow) await picker.locator('label.follow', { hasText: 'Follow the timer' }).locator('input').uncheck()
+    await picker.locator('input').first().fill(PLAYLIST)
+    await picker.locator('input').first().press('Enter')
+    await expect(app.locator('.music-meta b')).toHaveText('Fake song')
+    if (follow) await expect(app.locator('.music')).toHaveAttribute('data-playing')
+    else expect((await recorded(app)).player).toEqual(['create'])
+  })
+}
+
 test('a bad link explains itself in the picker', async ({ app }) => {
   await shortcut(app, 'm')
   const picker = app.locator('.music-picker')

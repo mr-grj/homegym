@@ -7,7 +7,7 @@ test('the demo stays in the browser', async ({ page }) => {
   const calls: string[] = []
   page.on('request', (request) => request.url().includes('/api/') && calls.push(request.url()))
   await page.goto('./')
-  await expect(page.locator('.routines .chip-main')).toHaveCount(8)
+  await expect(page.locator('.routines .chip-main')).toHaveCount(7)
   await expect(page.locator('.routines .chip-main').first()).toContainText('Full body (20 min)')
   await expect(page.locator('.demo-badge')).toHaveAttribute('href', 'https://github.com/mr-grj/homegym')
   await enter(page, '1s')
@@ -27,7 +27,7 @@ test('the demo works with storage blocked', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto('./')
-  await expect(page.locator('.routines .chip-main')).toHaveCount(8)
+  await expect(page.locator('.routines .chip-main')).toHaveCount(7)
   expect(errors).toEqual([])
 })
 

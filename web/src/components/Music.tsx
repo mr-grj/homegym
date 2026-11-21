@@ -107,7 +107,7 @@ export function MusicDock() {
 }
 
 /** Picker for pasting a link or reusing a recent one. */
-export function MusicPicker({ onDone }: { onDone: () => void }) {
+export function MusicPicker({ running, onDone }: { running: boolean; onDone: () => void }) {
   const m = useMusic()
   const [text, setText] = useState('')
   const [failure, setFailure] = useState('')
@@ -122,7 +122,7 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
     setFailure('')
     resolveSource(parsed).then(
       (full) => {
-        music.load(full)
+        music.load(full, running && music.state.follow)
         onDone()
       },
       (e: Error) => setFailure(e.message),

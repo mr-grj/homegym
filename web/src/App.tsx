@@ -345,7 +345,7 @@ export default function App() {
       )}
       {panel === 'music' && (
         <Modal onClose={() => setPanel(null)}>
-          <MusicPicker onDone={() => setPanel(null)} />
+          <MusicPicker running={running} onDone={() => setPanel(null)} />
         </Modal>
       )}
       {panel === 'voice' && (

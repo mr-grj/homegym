@@ -25,7 +25,7 @@ const quick: [string, string][] = [
   ['1:30  ·  90s', '90 second countdown'],
   ['1h 15m deep work', 'Labelled countdown'],
   ['⏎ on empty', 'Stopwatch'],
-  ['ant…', 'Open a routine by name'],
+  ['ful…', 'Open a routine by name'],
 ]
 
 const syntax = `# Title

@@ -5,7 +5,7 @@ type Data = { next: number; routines: RoutineRecord[]; sessions: Session[]; sett
 
 const KEY = 'homegym.demo'
 const PLAYLIST = 'https://soundcloud.com/fitleague/sets/gym-motivation-workout-music'
-const ORDER = ['full-body-20', 'core-10', 'tabata', 'mobility-morning', 'stretch-open-ended', 'breathing-4-7-8', 'deep-work', 'antrenament-full-body.ro']
+const ORDER = ['full-body-20', 'core-10', 'tabata', 'mobility-morning', 'stretch-open-ended', 'breathing-4-7-8', 'deep-work']
 const examples = import.meta.glob<string>('../../examples/*.txt', { query: '?raw', import: 'default', eager: true })
 const rank = (path: string) => {
   const index = ORDER.indexOf(path.split('/').pop()!.replace(/\.txt$/, ''))
@@ -15,6 +15,7 @@ const rank = (path: string) => {
 function seed(): Data {
   const now = new Date().toISOString()
   const sources = Object.keys(examples)
+    .filter((path) => !/\.[a-z]{2}\.txt$/.test(path))
     .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
     .map((path) => examples[path])
   const routines = sources.map((source, i) => ({ id: i + 1, source, updated_at: now }))
