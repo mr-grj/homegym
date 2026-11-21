@@ -721,7 +721,7 @@ kbd {
 }
 
 .stage[data-state='paused'] .time {
-  animation: breathe 2s ease-in-out infinite;
+  animation: breathe 5s ease-in-out infinite;
 }
 
 .stage[data-state='armed'] .time {
@@ -785,7 +785,7 @@ kbd {
 }
 
 .stage[data-state='armed'] .cue {
-  animation: breathe 2s ease-in-out infinite;
+  animation: breathe 5s ease-in-out infinite;
 }
 
 .controls {
@@ -2385,7 +2385,7 @@ kbd {
 
 @keyframes breathe {
   50% {
-    opacity: 0.35;
+    opacity: 0.6;
   }
 }
 
@@ -2487,6 +2487,7 @@ kbd {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
