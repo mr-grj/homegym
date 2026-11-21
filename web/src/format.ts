@@ -17,6 +17,11 @@ export function human(seconds: number): string {
   return `${s}s`
 }
 
+const apple = /Mac|iPhone|iPad/.test(navigator.userAgent)
+
+/** Shortcut text for this device: ⌘, ⌥ and ⇧ read Ctrl, Alt and Shift off Apple devices. */
+export const keyLabel = (keys: string) => (apple ? keys : keys.replace(/⌘/g, 'Ctrl+').replace(/⌥/g, 'Alt+').replace(/⇧/g, 'Shift+'))
+
 /** Local calendar-day key for an ISO timestamp. */
 export const dayKey = (iso: string) => new Date(iso).toLocaleDateString('en-CA')
 

@@ -70,7 +70,7 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
   await expect(today.locator('li small')).toHaveText('effort 8/10 · 1/2 blocks · Felt good')
   await shortcut(app, 'Escape')
 
-  await shortcut(app, 'u')
+  await app.keyboard.press('ControlOrMeta+z')
   await shortcut(app, 'h')
   await expect(app.locator('.history h3').first()).not.toContainText('Today')
 })

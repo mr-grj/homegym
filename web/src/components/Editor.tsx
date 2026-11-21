@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import type { RoutineRecord } from '../api'
-import { clock } from '../format'
+import { clock, keyLabel } from '../format'
 import { parseDoc, parseRoutine, serializeDoc, totalSeconds, uniqueTitle, withTitle, written, type Draft } from '../routine'
 import { usePersistent } from '../store'
 import { blankPlan, Builder, toPlan, type Change, type Plan } from './Builder'
@@ -164,7 +164,7 @@ export function Editor({ record, titles, library, onSave, onSaveAsNew, onDelete,
         ) : (
           <p className="syntax">
             {library.length ? 'Pick an exercise you used before or type a new one' : 'Name each exercise and pick a duration'}
-            <span className="keys-only"> · ⏎ next step · ⌥↑↓ move · ⌘Z undo</span>
+            <span className="keys-only">{keyLabel(' · ⏎ next step · ⌥↑↓ move · ⌘Z undo')}</span>
           </p>
         )}
       </header>
@@ -226,11 +226,11 @@ export function Editor({ record, titles, library, onSave, onSaveAsNew, onDelete,
             disabled={!canSave}
             {...tip(`Save as a new routine “${copyTitle}”. The original stays as it was`, '⌘⇧⏎')}
           >
-            Save as new <kbd>⌘⇧⏎</kbd>
+            Save as new <kbd>{keyLabel('⌘⇧⏎')}</kbd>
           </button>
         )}
         <button className="btn primary" onClick={save} disabled={!canSave} {...tip(record ? 'Save changes to this routine' : 'Save routine', '⌘⏎')}>
-          Save <kbd>⌘⏎</kbd>
+          Save <kbd>{keyLabel('⌘⏎')}</kbd>
         </button>
       </footer>
     </div>

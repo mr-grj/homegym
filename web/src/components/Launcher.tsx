@@ -25,6 +25,41 @@ const recentTimer = (text: string) => {
   return { text, routine, label: routine.title === 'Timer' ? clock(seconds) : `${clock(seconds)} ${routine.title}` }
 }
 
+function Peek({ routine }: { routine: Routine }) {
+  const blocks = routine.blocks.map((block, b) => ({ ...block, steps: routine.steps.filter((step) => step.block === b) }))
+  const rows = blocks.flatMap((block) => [
+    { name: block.name, rounds: block.steps[0].rounds, seconds: block.seconds, step: false },
+    ...(blocks.length === 1 ? block.steps.filter((step) => step.round === 1).map((step) => ({ name: step.label, rounds: 1, seconds: step.seconds, step: true })) : []),
+  ])
+  const shown = rows.length > 8 ? rows.slice(0, 7) : rows
+  return (
+    <div className="peek">
+      <div className="peek-strip">
+        {blocks.map((block, b) => (
+          <span key={b} style={{ flex: `${block.steps.reduce((sum, step) => sum + (step.seconds ?? 30), 0)} 1 0` }}>
+            {block.steps.map((step, i) => (
+              <i key={i} data-rest={step.rest || undefined} style={{ flex: `${step.seconds ?? 30} 1 0` }} />
+            ))}
+          </span>
+        ))}
+      </div>
+      <ul>
+        {shown.map((row, i) => (
+          <li key={i} data-step={row.step || undefined}>
+            <span>
+              {row.name}
+              {row.rounds > 1 && <em> ×{row.rounds}</em>}
+            </span>
+            {row.seconds !== null && <span className="num">{clock(row.seconds)}</span>}
+          </li>
+        ))}
+        {shown.length < rows.length && <li data-step>+{rows.length - shown.length} more</li>}
+      </ul>
+      <p>Click to load, then Space to start</p>
+    </div>
+  )
+}
+
 const shake = [
   { transform: 'translateX(0)' },
   { transform: 'translateX(-10px)' },
@@ -36,7 +71,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
   const [query, setQuery] = useState('')
   const [pick, setPick] = useState(-1)
   const [reserve, setReserve] = useState({ row: 0, list: 0 })
-  const entry = useRef<HTMLDivElement>(null)
+  const entry = useRef<HTMLFormElement>(null)
   const row = useRef<HTMLDivElement>(null)
   const scroll = useScrollFade<HTMLDivElement>()
   const list = scroll.ref
@@ -88,7 +123,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
 
   return (
     <main className="launcher">
-      <div className="entry" ref={entry}>
+      <form className="entry" ref={entry} onSubmit={(e) => (e.preventDefault(), submit())}>
         <input
           ref={inputRef}
           className="entry-input"
@@ -113,7 +148,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
           }}
         />
         <div className="entry-row" ref={row} style={text ? { minHeight: reserve.row } : undefined}>
-          <button className="hint" data-invalid={(!target && !link) || undefined} onClick={submit} {...tip(target || link ? hint[0].toUpperCase() + hint.slice(1) : 'Type a duration like 25m', target || link ? '⏎' : undefined)}>
+          <button className="hint" data-invalid={(!target && !link) || undefined} {...tip(target || link ? hint[0].toUpperCase() + hint.slice(1) : 'Type a duration like 25m', target || link ? '⏎' : undefined)}>
             {(target || link) && <kbd>⏎</kbd>}
             <span>{hint}</span>
           </button>
@@ -121,7 +156,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
             <div className="recent-timers">
               <span className="entry-or">or</span>
               {timers.map((t) => (
-                <button key={t.text} className="recent-timer" onClick={() => onQuick(t.routine, t.text)} {...tip(`Start ${t.label} again`)}>
+                <button key={t.text} type="button" className="recent-timer" onClick={() => onQuick(t.routine, t.text)} {...tip(`Start ${t.label} again`)}>
                   <span className="chip-play">
                     <Icon name="play" />
                   </span>
@@ -131,7 +166,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
             </div>
           )}
         </div>
-      </div>
+      </form>
 
       <div
         className="routine-list"
@@ -144,7 +179,7 @@ export function Launcher({ routines, recent, sessions, inputRef, onQuick, onOpen
             const total = totalSeconds(r.steps)
             return (
               <div key={r.id} className="chip" data-active={(target?.kind === 'routine' && target.routine === r) || undefined}>
-                <button className="chip-main" onClick={() => onOpen(r)} {...tip(`Load “${r.title}”, then press Space to start`)}>
+                <button className="chip-main" onClick={() => onOpen(r)} {...tip(`Load “${r.title}”, then press Space to start`, undefined, <Peek routine={r} />)}>
                   <span className="chip-play">
                     <Icon name="play" />
                   </span>

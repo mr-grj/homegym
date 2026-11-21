@@ -74,9 +74,12 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 | `S` · `V` | Sound · voice |
 | `M` · `[` · `]` | Music: play/pause, previous, next |
 | `H` · `?` | History · all shortcuts |
+| `⌘Z` | Undo what the last message offers to undo |
 | `⌘⏎` · `⌘⇧⏎` | In the editor: save · save as a new routine |
 | `⌘E` | In the editor: switch between builder and text |
 | `⏎` · `⌥↑` `⌥↓` | In the builder: add the next step · move a step or block |
+
+On Windows and Linux, `⌘` is `Ctrl` and `⌥` is `Alt` (the app shows them that way). On the start screen letters type into the clock, so press `Esc` first to use them as shortcuts.
 
 Quick timers are logged automatically. Routines end with a short finish sheet. Anything you delete can be undone for a few seconds.
 

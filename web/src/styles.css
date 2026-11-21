@@ -392,10 +392,6 @@ kbd {
   transition: background 0.15s, color 0.15s, transform 0.15s;
 }
 
-.chip-play .icon {
-  margin-left: 2px;
-}
-
 .chip:hover .chip-play,
 .chip[data-active] .chip-play {
   color: #fff;
@@ -1615,11 +1611,25 @@ kbd {
   gap: 8px;
 }
 
+.help-grid > * {
+  min-width: 0;
+}
+
 .help dl div {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: center;
+}
+
+.help dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.help dt kbd {
+  white-space: nowrap;
 }
 
 .help dd {
@@ -1639,8 +1649,15 @@ kbd {
   margin-top: 24px;
 }
 
+.help-note {
+  margin: 16px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 .help pre {
   font: 0.85rem/1.6 ui-monospace, 'SF Mono', monospace;
+  overflow-x: auto;
   padding: 12px 14px;
   border-radius: 12px;
   background: var(--bg);
@@ -1657,10 +1674,13 @@ kbd {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 10px 10px 18px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 6px 6px 6px 18px;
   border-radius: 999px;
-  background: var(--fg);
-  color: var(--bg);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
   font-size: 0.92rem;
   font-weight: 550;
   box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.5);
@@ -1668,20 +1688,35 @@ kbd {
   transform: translateX(-50%);
 }
 
+.toast:not(:has(button)) {
+  padding: 10px 18px;
+}
+
+.toast > span {
+  text-wrap: balance;
+}
+
 .toast button {
   display: inline-flex;
   align-items: center;
+  flex: none;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 5px 6px 5px 10px;
   border-radius: 999px;
-  font-weight: 650;
-  background: color-mix(in oklab, var(--bg) 12%, transparent);
+  border: 1px solid var(--line);
+  font-weight: 600;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.toast kbd {
-  border-color: color-mix(in oklab, var(--bg) 30%, transparent);
-  color: inherit;
-  background: none;
+.toast button:hover {
+  border-color: var(--muted);
+  background: color-mix(in oklab, var(--fg) 7%, transparent);
+}
+
+.toast button .icon {
+  width: 1em;
+  height: 1em;
+  color: var(--muted);
 }
 
 /* Tooltip */
@@ -1716,6 +1751,80 @@ kbd {
   color: inherit;
   background: none;
   border-color: color-mix(in oklab, var(--bg) 35%, transparent);
+}
+
+.tooltip[data-rich] {
+  display: block;
+  width: min(300px, calc(100vw - 16px));
+  padding: 12px 14px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.peek-strip {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.peek-strip span {
+  display: flex;
+  gap: 1px;
+  min-width: 2px;
+}
+
+.peek-strip i {
+  height: 6px;
+  min-width: 1px;
+  border-radius: 1.5px;
+  background: color-mix(in oklab, var(--work) 80%, var(--fg));
+}
+
+.peek-strip i[data-rest] {
+  background: var(--rest);
+}
+
+.peek ul {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.peek li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.peek li span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.peek li[data-step] {
+  padding-left: 10px;
+  color: var(--muted);
+}
+
+.peek em,
+.peek .num {
+  font-style: normal;
+  color: var(--muted);
+}
+
+.peek p {
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 0.74rem;
+  color: var(--muted);
 }
 
 /* Music */

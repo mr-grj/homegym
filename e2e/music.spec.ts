@@ -57,7 +57,7 @@ test('the picker lists recent links and its switches change how music behaves', 
   await expect(app.locator('.music-meta b')).toHaveText('Fake song')
   await app.locator('[data-tool=music]').click()
   const picker = app.locator('.music-picker')
-  await expect(picker.locator('.recent-music li')).toHaveText(['Fake songplaylist'])
+  await expect(picker.locator('.recent-music li')).toHaveText(['Fake songplaylist', 'Gym Motivation & Workout Musicplaylist'])
   await picker.locator('label.follow', { hasText: 'Follow the timer' }).locator('input').uncheck()
   await shortcut(app, 'Escape')
   await expect(app.locator('.music .toggle')).not.toHaveAttribute('data-on')
@@ -68,6 +68,16 @@ test('the picker lists recent links and its switches change how music behaves', 
 
   await app.locator('.music-controls [data-tip="Remove music"]').click()
   await expect(app.locator('.music')).toHaveCount(0)
+})
+
+test('the demo suggests a playlist without loading SoundCloud', async ({ app }) => {
+  const calls: string[] = []
+  app.on('request', (request) => /soundcloud/.test(request.url()) && calls.push(request.url()))
+  await app.reload()
+  await shortcut(app, 'm')
+  await expect(app.locator('.music-picker .recent-music li')).toHaveText(['Gym Motivation & Workout Musicplaylist'])
+  await expect(app.locator('.music')).toHaveCount(0)
+  expect(calls).toEqual([])
 })
 
 test('a bad link explains itself in the picker', async ({ app }) => {

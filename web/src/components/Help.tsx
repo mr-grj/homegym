@@ -1,3 +1,5 @@
+import { keyLabel } from '../format'
+
 const keys: [string, string][] = [
   ['Space · Enter', 'Start · pause'],
   ['→  ←', 'Next · previous step'],
@@ -8,7 +10,7 @@ const keys: [string, string][] = [
   ['F', 'Fullscreen'],
   ['E', 'Edit current routine'],
   ['H', 'History'],
-  ['U', 'Undo'],
+  ['⌘Z', 'Undo'],
   ['M', 'Play · pause music'],
   ['[  ]', 'Previous · next track'],
   ['⌘V', 'Paste a YouTube or SoundCloud link → music'],
@@ -39,16 +41,23 @@ export function Help() {
         <h2>Shortcuts</h2>
       </header>
       <div className="help-grid">
-        <dl>
-          {keys.map(([k, v]) => (
-            <div key={k}>
-              <dt>
-                <kbd>{k}</kbd>
-              </dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
+        <div>
+          <dl>
+            {keys.map(([k, v]) => (
+              <div key={k}>
+                <dt>
+                  {keyLabel(k)
+                    .split(' · ')
+                    .map((part) => (
+                      <kbd key={part}>{part}</kbd>
+                    ))}
+                </dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="help-note">On the start screen letters type into the clock. Press Esc first to use them as shortcuts.</p>
+        </div>
         <div>
           <h4>Type a timer</h4>
           <dl>

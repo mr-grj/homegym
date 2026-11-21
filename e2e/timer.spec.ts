@@ -84,7 +84,7 @@ test('an empty Enter starts a stopwatch that logs when stopped', async ({ app })
   await expect(app.locator('.launcher')).toBeVisible()
   await expect(app.locator('.toast')).toContainText('Logged Stopwatch · 1m 5s')
 
-  await shortcut(app, 'u')
+  await app.keyboard.press('ControlOrMeta+z')
   await expect(app.locator('.toast')).toHaveCount(0)
   await expect(app.locator('.today')).toHaveText('Nothing logged today yet')
 })

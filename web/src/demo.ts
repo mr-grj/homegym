@@ -4,6 +4,7 @@ import { parseRoutine } from './routine'
 type Data = { next: number; routines: RoutineRecord[]; sessions: Session[]; settings: Record<string, unknown> }
 
 const KEY = 'homegym.demo'
+const PLAYLIST = 'https://soundcloud.com/fitleague/sets/gym-motivation-workout-music'
 const ORDER = ['full-body-20', 'core-10', 'tabata', 'mobility-morning', 'stretch-open-ended', 'breathing-4-7-8', 'deep-work', 'antrenament-full-body.ro']
 const examples = import.meta.glob<string>('../../examples/*.txt', { query: '?raw', import: 'default', eager: true })
 const rank = (path: string) => {
@@ -41,7 +42,8 @@ function seed(): Data {
     logged(2, undefined, at(1, 10), 1500, null),
     logged(3, sources[1], at(3, 18, 15), 600, 6),
   ]
-  return { next: 100, routines, sessions, settings: { 'homegym.recent': ['25m focus', '5m', '1:30'] } }
+  const music = { recent: [{ url: PLAYLIST, kind: 'soundcloud', list: PLAYLIST, label: 'Gym Motivation & Workout Music' }] }
+  return { next: 100, routines, sessions, settings: { 'homegym.recent': ['25m focus', '5m', '1:30'], 'homegym.music': music } }
 }
 
 let memory: Data | null = null

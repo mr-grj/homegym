@@ -1,13 +1,21 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { keyLabel } from '../format'
 
-type Tip = { text: string; key?: string; x: number; y: number; below: boolean }
+type Tip = { text: string; key?: string; body?: ReactNode; x: number; top: number; bottom: number }
 
-/** Tooltip props for a button: visible hint, optional shortcut, accessible name. */
-export const tip = (text: string, key?: string) => ({ 'data-tip': text, 'data-key': key, 'aria-label': text })
+const bodies = new WeakMap<Element, ReactNode>()
+
+/** Tooltip props for a button: visible hint, optional shortcut, accessible name, optional rich body shown instead of the hint. */
+export const tip = (text: string, key?: string, body?: ReactNode) => ({
+  'data-tip': text,
+  'data-key': key && keyLabel(key),
+  'aria-label': text,
+  ...(body === undefined ? {} : { ref: (el: HTMLElement | null) => void (el && bodies.set(el, body)) }),
+})
 
 export function Tooltips() {
   const [current, setCurrent] = useState<Tip | null>(null)
-  const [shift, setShift] = useState(0)
+  const [place, setPlace] = useState({ shift: 0, below: false })
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -17,9 +25,8 @@ export function Tooltips() {
 
     const show = (el: HTMLElement) => {
       const r = el.getBoundingClientRect()
-      const below = r.top < 90
       warm = true
-      setCurrent({ text: el.dataset.tip!, key: el.dataset.key, x: r.left + r.width / 2, y: below ? r.bottom + 10 : r.top - 10, below })
+      setCurrent({ text: el.dataset.tip!, key: el.dataset.key, body: bodies.get(el), x: r.left + r.width / 2, top: r.top, bottom: r.bottom })
     }
 
     const hide = () => {
@@ -71,7 +78,8 @@ export function Tooltips() {
     const half = box.current.offsetWidth / 2
     const min = 8 + half
     const max = innerWidth - 8 - half
-    setShift(Math.min(max, Math.max(min, current.x)) - current.x)
+    const below = current.top < 90 || current.top - 18 < box.current.offsetHeight
+    setPlace({ shift: Math.min(max, Math.max(min, current.x)) - current.x, below })
   }, [current])
 
   if (!current) return null
@@ -80,11 +88,16 @@ export function Tooltips() {
       ref={box}
       className="tooltip"
       role="tooltip"
-      data-below={current.below || undefined}
-      style={{ left: current.x + shift, top: current.y }}
+      data-rich={current.body ? '' : undefined}
+      data-below={place.below || undefined}
+      style={{ left: current.x + place.shift, top: place.below ? current.bottom + 10 : current.top - 10 }}
     >
-      {current.text}
-      {current.key && <kbd>{current.key}</kbd>}
+      {current.body ?? (
+        <>
+          {current.text}
+          {current.key && <kbd>{current.key}</kbd>}
+        </>
+      )}
     </div>
   )
 }

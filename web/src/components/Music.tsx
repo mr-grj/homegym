@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from 'react'
-import { clock } from '../format'
+import { clock, keyLabel } from '../format'
 import { attach, music, parseMusic, resolveSource, useMusic } from '../music'
 import { useSetting } from '../store'
 import { Icon } from './Icon'
@@ -225,7 +225,7 @@ export function MusicPicker({ onDone }: { onDone: () => void }) {
           In YouTube Music or SoundCloud open a playlist, album, artist or song → <b>Share</b> → <b>Copy link</b>.
         </li>
         <li>
-          Press <kbd>⌘V</kbd> anywhere in homegym. Your recent links stay here.
+          Press <kbd>{keyLabel('⌘V')}</kbd> anywhere in homegym. Your recent links stay here.
         </li>
         <li>Signed in to YouTube in this browser? Premium carries over, so no ads.</li>
       </ol>

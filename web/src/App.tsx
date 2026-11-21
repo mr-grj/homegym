@@ -12,7 +12,7 @@ import { MusicDock, MusicPicker } from './components/Music'
 import { tip, Tooltips } from './components/Tooltips'
 import { exitLabel, Stage } from './components/Stage'
 import { VoicePicker } from './components/Voice'
-import { human } from './format'
+import { human, keyLabel } from './format'
 import { music, parseMusic, resolveSource, useMusic, type Source } from './music'
 import { parseRoutine, stepLibrary, uniqueTimers, type Routine } from './routine'
 import { baseLang } from './sound'
@@ -21,7 +21,7 @@ import { arm, totalElapsed, type Run } from './timer'
 import { useWorkout, type Prefs } from './workout'
 
 type Panel = 'finish' | 'history' | 'help' | 'music' | 'voice' | { edit: RoutineRecord | null } | null
-type Toast = { id: number; text: string; undo?: () => void; key?: string }
+type Toast = { id: number; text: string; undo?: () => void; editor?: boolean }
 
 const sessionTimes = (run: Run, now: number): Pick<SessionInput, 'title' | 'started_at' | 'ended_at' | 'seconds'> => ({
   title: run.routine.title,
@@ -49,8 +49,12 @@ export default function App() {
     return [...found.values()]
   }, [routines])
 
-  const notify = (text: string, undo?: () => void, key?: string) => setToast({ id: Date.now(), text, undo, key })
-  const dropEditorToast = () => setToast((t) => (t?.key === '⌘Z' ? null : t))
+  const notify = (text: string, undo?: () => void, editor?: boolean) => setToast({ id: Date.now(), text, undo, editor })
+  const dropEditorToast = () => setToast((t) => (t?.editor ? null : t))
+  const undo = () => {
+    toast?.undo?.()
+    setToast(null)
+  }
   const loadRoutines = () => api.routines().then(setRecords, () => notify('API unreachable. Routines not loaded'))
   const loadSessions = () => api.sessions().then(setSessions, () => {})
 
@@ -182,7 +186,15 @@ export default function App() {
   const flip = (key: keyof Prefs) => setPrefs((p) => ({ ...p, [key]: !p[key] }))
 
   const onKey = useEffectEvent((e: KeyboardEvent) => {
-    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
+    if (e.defaultPrevented) return
+    const target = e.target instanceof Element ? e.target : null
+    const field = target?.closest<HTMLInputElement | HTMLTextAreaElement>('input, textarea')
+    if (!panel && toast?.undo && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z' && !field?.value) {
+      e.preventDefault()
+      return undo()
+    }
+    const layoutSymbol = e.key.length === 1 && !/[\p{L}\p{N}]/u.test(e.key) && !e.metaKey && (e.altKey || e.getModifierState('AltGraph'))
+    if ((e.metaKey || e.ctrlKey || e.altKey) && !layoutSymbol) return
     if (panel) {
       if (e.key === 'Escape' || panel === 'help') {
         e.preventDefault()
@@ -190,7 +202,8 @@ export default function App() {
       }
       return
     }
-    if (e.target instanceof Element && e.target.closest('input, textarea')) return
+    if (field && !(field === launcher.current && !field.value && ['?', '[', ']'].includes(e.key))) return
+    if ((e.key === ' ' || e.key === 'Enter') && target?.closest('button, a')?.matches(':focus-visible')) return
     const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
     const anytime: Record<string, () => void> = {
       t: () => flip('elapsed'),
@@ -202,10 +215,6 @@ export default function App() {
       m: () => (music.state.source ? music.toggle() : setPanel('music')),
       '[': music.prev,
       ']': music.next,
-      u: () => {
-        toast?.undo?.()
-        setToast(null)
-      },
     }
     const during: Record<string, () => void> = {
       ' ': workout.toggle,
@@ -229,9 +238,13 @@ export default function App() {
     if (action) {
       e.preventDefault()
       action()
-    } else if (!run && (key.length === 1 || key === 'Enter')) {
+    } else if (!run && key === 'Enter') {
+      e.preventDefault()
       launcher.current?.focus()
-      if (key === '/' || key === 'Enter') e.preventDefault()
+      launcher.current?.form?.requestSubmit()
+    } else if (!run && key.length === 1) {
+      launcher.current?.focus()
+      if (key === '/') e.preventDefault()
     }
   })
 
@@ -360,7 +373,7 @@ export default function App() {
             onSaveAsNew={saveRoutineAsNew}
             onDelete={() => panel.edit && void deleteRoutine(panel.edit)}
             library={library}
-            onToast={(text, undo) => (text === null ? dropEditorToast() : notify(text, undo, '⌘Z'))}
+            onToast={(text, undo) => (text === null ? dropEditorToast() : notify(text, undo, true))}
           />
         </Modal>
       )}
@@ -369,14 +382,9 @@ export default function App() {
         <div className="toast" key={toast.id} role="status">
           <span>{toast.text}</span>
           {toast.undo && (
-            <button
-              onClick={() => {
-                toast.undo?.()
-                setToast(null)
-              }}
-              {...tip('Undo that', toast.key ?? 'U')}
-            >
-              Undo <kbd>{toast.key ?? 'U'}</kbd>
+            <button onClick={undo} {...tip('Undo that', '⌘Z')}>
+              <Icon name="undo" />
+              Undo <kbd>{keyLabel('⌘Z')}</kbd>
             </button>
           )}
         </div>

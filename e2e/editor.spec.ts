@@ -88,7 +88,7 @@ test('deleting a routine can be undone', async ({ app }) => {
   await app.locator('.editor .btn.danger').click()
   await expect(app.locator('.toast')).toContainText('Deleted Tabata (12 min)')
   await expect(chip(app, 'Tabata')).toHaveCount(0)
-  await shortcut(app, 'u')
+  await app.keyboard.press('ControlOrMeta+z')
   await expect(chip(app, 'Tabata')).toHaveCount(1)
 })
 
