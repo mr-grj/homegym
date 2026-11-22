@@ -44,7 +44,9 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 
 ## Using it
 
-<img src="docs/screenshots/phone.png" alt="homegym on a phone during a rest" width="220" align="right">
+<p align="center">
+  <img src="docs/screenshots/journey.png" alt="A workout on a phone, start to finish: picking a routine, a goblet squat with its looping figure, a rest previewing the band row under Up next, and the finish sheet with effort and a note" width="900">
+</p>
 
 | Type into the clock | Result |
 | --- | --- |
