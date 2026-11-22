@@ -28,7 +28,7 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
   await shortcut(app, 'ArrowRight')
   await expect(label).toHaveText('Plank')
   await expect(app.locator('.meta')).toContainText('Circuit · round 1/3')
-  await expect(app.locator('.note')).toHaveText('shoulders over wrists · squeeze glutes')
+  await expect(app.locator('.note')).toHaveText('elbows under shoulders · squeeze glutes')
   await expect(app.locator('.next')).toHaveText('Next · Rest · 0:15')
 
   await shortcut(app, 'ArrowRight')

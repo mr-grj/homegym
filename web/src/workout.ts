@@ -5,7 +5,9 @@ import { baseLang, cue, speak, unlockAudio, useWakeLock, vibrate } from './sound
 import { usePersistent } from './store'
 import { advance, arm, back, countdown, extend, face, finish, jump, pause, play, type Run } from './timer'
 
-export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean }
+export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean; demos: boolean }
+
+export const PREFS: Prefs = { sound: true, voice: true, elapsed: false, demos: true }
 
 const TICK_MS = 100
 const TICKER = 'onmessage = (e) => setInterval(() => postMessage(0), e.data)'

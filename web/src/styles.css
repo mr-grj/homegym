@@ -702,6 +702,119 @@ kbd {
   gap: 6px;
 }
 
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+}
+
+.demo-slot {
+  position: relative;
+  flex: 0 1 clamp(72px, 19vh, 210px);
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.demo-cue {
+  position: absolute;
+  left: 50%;
+  translate: -50% calc(-100% - 4px);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--phase);
+  animation: fade 0.3s ease-out;
+}
+
+@media (min-aspect-ratio: 4 / 3) and (min-width: 900px) {
+  .clock {
+    position: relative;
+  }
+
+  .demo-slot {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 4vw);
+    width: clamp(0px, calc((100vw - 100%) / 2 - 8vw), 280px);
+    height: auto;
+    aspect-ratio: 25 / 24;
+    margin: 0;
+    translate: 0 -50%;
+  }
+
+  .demo {
+    width: 100%;
+  }
+}
+
+.demo {
+  display: block;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 25 / 24;
+  overflow: visible;
+  color: var(--fg);
+  opacity: 0.88;
+  transition: opacity 0.5s;
+  animation: fade 0.3s ease-out;
+}
+
+.demo[data-dim] {
+  opacity: 0.42;
+}
+
+.demo polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.demo polyline[data-fill] {
+  fill: currentColor;
+}
+
+.demo circle {
+  fill: currentColor;
+}
+
+.demo [data-tone='far'] {
+  color: color-mix(in oklab, var(--fg) 40%, var(--bg));
+}
+
+.demo [data-tone='prop'] {
+  color: var(--muted);
+}
+
+.demo [data-tone='fixture'] {
+  color: color-mix(in oklab, var(--muted) 45%, var(--bg));
+}
+
+.demo [data-tone='band'] {
+  color: var(--phase);
+}
+
+.demo [data-tone='wall'],
+.demo-floor {
+  stroke: var(--faint);
+  stroke-width: 0.03;
+  stroke-linecap: round;
+}
+
+.demo-ghost {
+  opacity: 0.3;
+}
+
+@media (max-height: 520px) {
+  .demo-slot {
+    display: none;
+  }
+}
+
 .time {
   font-size: var(--huge);
   font-weight: 650;
@@ -1353,6 +1466,40 @@ kbd {
 
 .b-step > * {
   grid-row: 1;
+}
+
+.b-step > .b-grip {
+  grid-column: 1;
+}
+
+.b-step > .b-kind {
+  grid-column: 2;
+}
+
+.b-step > .b-label {
+  grid-column: 3;
+}
+
+.b-step > .b-time {
+  grid-column: 4;
+}
+
+.b-step > .b-icon {
+  grid-column: 5;
+}
+
+.b-step[data-demo] > .b-label {
+  padding-right: 26px;
+}
+
+.b-demo {
+  grid-column: 3;
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 28px;
+  color: var(--muted);
 }
 
 .b-step[data-dragging] {
