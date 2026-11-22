@@ -19,11 +19,13 @@ test('the figure shows the exercise, previews the next one during a rest and fol
   await expect(app.locator('.label')).toHaveText('Switch')
   await expect(demo(app)).toHaveAttribute('data-move', 'standingBandRow')
   await expect(demo(app)).toHaveAttribute('data-dim')
+  await expect(app.locator('.demo-cue')).toHaveText('Up next')
 
   await shortcut(app, 'ArrowRight')
   await expect(app.locator('.label')).toHaveText('Band row')
   await expect(demo(app)).toHaveAttribute('data-move', 'standingBandRow')
   await expect(demo(app)).not.toHaveAttribute('data-dim')
+  await expect(app.locator('.demo-cue')).toHaveCount(0)
 
   await shortcut(app, 'Space')
   await expect(demo(app)).not.toHaveAttribute('data-playing')
@@ -98,16 +100,21 @@ test('wide screens put the figure beside the clock, short ones leave it out', as
   await expect(app.locator('.demo-slot')).toBeHidden()
 })
 
-test('the builder marks exercises that have a demo and suggests them', async ({ app }) => {
+test('the builder marks exercises that have a demo and suggests a few as you type', async ({ app }) => {
   await app.locator('button', { hasText: /^\s*Routine$/ }).click()
   await app.locator('button', { hasText: /^\s*Exercise$/ }).first().click()
   const label = app.locator('.b-label').first()
+  const options = app.locator('#known-work option')
+  await label.focus()
+  expect(await options.count()).toBeLessThanOrEqual(8)
+  await label.fill('kettle')
+  await expect(app.locator('#known-work option[value="Kettlebell swing"]')).toHaveCount(1)
+  expect(await options.count()).toBeLessThanOrEqual(8)
+  for (const value of await options.evaluateAll((list) => list.map((o) => (o as HTMLOptionElement).value))) expect(value.toLowerCase()).toContain('kettle')
   await label.fill('Thoracic rotations')
   await expect(app.locator('.b-demo')).toHaveCount(0)
   await label.fill('KB swing')
   await expect(app.locator('.b-demo')).toHaveAttribute('data-tip', 'Shows a demo during the workout: Kettlebell swing')
-  await expect(app.locator('#known-work option[value="Kettlebell swing"]')).toHaveCount(1)
-  await expect(app.locator('#known-work option[value="Goblet squat"]')).toHaveCount(1)
 })
 
 test('help lists the demo shortcut', async ({ app }) => {

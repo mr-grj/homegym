@@ -1,5 +1,6 @@
 import { useMemo, type CSSProperties, type MouseEvent } from 'react'
 import { clock } from '../format'
+import { headroom } from '../figure'
 import { demoStep, moveFor } from '../moves'
 import { totalSeconds } from '../routine'
 import { countdown, face, totalElapsed, type Run } from '../timer'
@@ -116,6 +117,11 @@ export function Stage({ run, elapsed, demos, onToggle, onSkip, onBack, onStop, o
                   dim={f.step.rest}
                   restart={run.index}
                 />
+              )}
+              {demo && f.step.rest && (
+                <span className="demo-cue" style={{ top: `${headroom(demo.move) * 100}%` }}>
+                  Up next
+                </span>
               )}
             </div>
           )}

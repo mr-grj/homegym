@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import seed from '../../api/app/seed.txt?raw'
-import { BODY, keyPose, loopLength, poseAt, shape, shapePoints, VIEW, centre, type Move, type Point } from './figure'
+import { BODY, centre, joint, keyPose, loopLength, poseAt, shape, shapePoints, VIEW, type Move, type Point } from './figure'
 import { allNames, CATALOG, demoStep, moveFor, moveKey, MOVES } from './moves'
 import { parseRoutine } from './routine'
 import { arm, jump, finish } from './timer'
@@ -52,6 +52,19 @@ describe('matching names', () => {
     ['Plank', 'plank'],
     ['High plank', 'highPlank'],
     ['  Mountain   climbers ', 'mountainClimber'],
+    ['Single-Arm Row', 'singleArmRow'],
+    ['Hammer curls', 'bicepsCurl'],
+    ['Chin-ups', 'pullUp'],
+    ['Diamond push-ups', 'pushUp'],
+    ['Bicycle crunches', 'bicycleCrunch'],
+    ['Crunches', 'crunch'],
+    ['Reverse crunches', 'reverseCrunch'],
+    ['Toe touch crunches', 'toeTouchCrunch'],
+    ['Standing toe touch', 'standingToeTouch'],
+    ['Banded glute bridge', 'gluteBridge'],
+    ['Tracțiuni', 'pullUp'],
+    ['Fandări laterale', 'lateralLunge'],
+    ["Runner's lunge", 'runnersLunge'],
   ])('%s shows %s', (label, id) => {
     expect(moveFor(label)?.id).toBe(id)
   })
@@ -85,7 +98,11 @@ describe('matching names', () => {
     '90/90 hip switches',
     'Hip circles',
     'Lunges with weights',
-    'Wall sit',
+    'Deadlift',
+    'Toe touch',
+    'Toe touches',
+    'Chest press',
+    'Neck stretch',
     '',
   ])('%s shows nothing', (label) => {
     expect(moveFor(label)).toBeNull()
@@ -186,8 +203,10 @@ describe.each(moves)('%s', (_, move) => {
       }
   })
 
-  test('keeps every limb its own length', () => {
-    for (const s of shapes) {
+  test('keeps every limb its own length unless the pose foreshortens it', () => {
+    frames(move).forEach((pose) => {
+      if (pose.shorten) return
+      const s = shape(move, pose)
       for (const arm of s.arms) {
         expect(distance(arm[0], arm[1])).toBeCloseTo(BODY.upper, 3)
         expect(distance(arm[1], arm[2])).toBeCloseTo(BODY.fore, 3)
@@ -196,7 +215,7 @@ describe.each(moves)('%s', (_, move) => {
         expect(distance(leg[0], leg[1])).toBeCloseTo(BODY.thigh, 3)
         expect(distance(leg[1], leg[2])).toBeCloseTo(BODY.shin, 3)
       }
-    }
+    })
   })
 
   test('loops back to where it started', () => {
@@ -205,14 +224,31 @@ describe.each(moves)('%s', (_, move) => {
   })
 })
 
+describe('every demo looks like its own exercise', () => {
+  const traces = moves.map(([id, move]) => {
+    const total = loopLength(move)
+    const cx = centre(move)
+    const times = total ? Array.from({ length: 16 }, (_, i) => (total * i) / 16) : [0]
+    return { id, frames: times.map((t) => shapePoints(shape(move, poseAt(move, t))).map(([x, y]): Point => [x - cx, y])) }
+  })
+  const gap = (a: Point[], b: Point[]) => a.reduce((sum, p, i) => sum + distance(p, b[i]), 0) / a.length
+  const near = (a: Point[][], b: Point[][]) => a.reduce((sum, f) => sum + Math.min(...b.map((g) => gap(f, g))), 0) / a.length
+
+  test('no two demos with the same equipment move alike', () => {
+    const alike: string[] = []
+    for (const [i, a] of traces.entries())
+      for (const b of traces.slice(i + 1)) {
+        if (a.frames[0].length !== b.frames[0].length) continue
+        if (Math.max(near(a.frames, b.frames), near(b.frames, a.frames)) < 0.05) alike.push(`${a.id} ~ ${b.id}`)
+      }
+    expect(alike).toEqual([])
+  })
+})
+
 describe('planted hands and feet', () => {
   test('anchored joints never move', () => {
-    for (const [, move] of moves.filter(([, m]) => m.anchor)) {
-      for (const pose of frames(move)) {
-        const s = shape(move, pose)
-        const joint = { toe: s.legs[0][3], shoulder: s.neck[0] }[move.anchor!.joint as 'toe' | 'shoulder']
-        expect(distance(joint, move.anchor!.at)).toBeLessThan(1e-6)
-      }
+    for (const [, move] of moves.filter(([, m]) => m.anchor && !m.poses.some((p) => p.lift))) {
+      for (const pose of frames(move)) expect(distance(joint(shape(move, pose), move.anchor!.joint), move.anchor!.at)).toBeLessThan(1e-6)
     }
   })
 

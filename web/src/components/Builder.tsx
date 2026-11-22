@@ -23,6 +23,7 @@ export const toPlan = (doc: Doc): Plan => ({
 export const blankPlan = (): Plan => ({ title: '', blocks: [newBlock()] })
 
 const PRESETS = [10, 15, 20, 30, 45, 60, 90, 120, 180, 300]
+const SUGGESTIONS = 8
 
 function place(blocks: Block[], stepId: number, blockId: number, beforeId: number | null) {
   const step = blocks.flatMap((block) => block.steps).find((s) => s.id === stepId)!
@@ -115,11 +116,19 @@ export function Builder({ plan, library, autoFocus, onChange }: Props) {
   emit.current = onChange
 
   const known = useMemo(() => new Map(library.map((step) => [`${step.rest}|${fold(step.label)}`, step])), [library])
-  const suggestions = useMemo(() => {
+  const [query, setQuery] = useState('')
+  const names = useMemo(() => {
     const work = library.filter((s) => !s.rest).map((s) => s.label)
     const used = new Set(work.map(fold))
     return [...work, ...CATALOG.filter((name) => !used.has(fold(name)))]
   }, [library])
+  const suggestions = useMemo(() => {
+    const typed = fold(query.trim())
+    if (!typed) return names.slice(0, SUGGESTIONS)
+    const starts = names.filter((name) => fold(name).startsWith(typed))
+    const inside = names.filter((name) => !fold(name).startsWith(typed) && fold(name).includes(typed))
+    return [...starts, ...inside].slice(0, SUGGESTIONS)
+  }, [names, query])
 
   useLayoutEffect(() => {
     if (focusNext.current) {
@@ -417,7 +426,11 @@ export function Builder({ plan, library, autoFocus, onChange }: Props) {
                     list={step.rest ? 'known-rest' : 'known-work'}
                     autoComplete="off"
                     enterKeyHint="next"
-                    onChange={(e) => pick(step, e.target.value, (e.nativeEvent as InputEvent).inputType)}
+                    onFocus={() => setQuery(step.rest ? '' : step.label)}
+                    onChange={(e) => {
+                      if (!step.rest) setQuery(e.target.value)
+                      pick(step, e.target.value, (e.nativeEvent as InputEvent).inputType)
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
                         e.preventDefault()
