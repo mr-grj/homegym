@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { CATALOG, moveFor } from '../moves'
 import { durationText, fold, readDuration, type Doc, type DocBlock, type DocStep, type Draft } from '../routine'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
@@ -114,6 +115,11 @@ export function Builder({ plan, library, autoFocus, onChange }: Props) {
   emit.current = onChange
 
   const known = useMemo(() => new Map(library.map((step) => [`${step.rest}|${fold(step.label)}`, step])), [library])
+  const suggestions = useMemo(() => {
+    const work = library.filter((s) => !s.rest).map((s) => s.label)
+    const used = new Set(work.map(fold))
+    return [...work, ...CATALOG.filter((name) => !used.has(fold(name)))]
+  }, [library])
 
   useLayoutEffect(() => {
     if (focusNext.current) {
@@ -320,7 +326,7 @@ export function Builder({ plan, library, autoFocus, onChange }: Props) {
   return (
     <div className="builder" ref={root} data-dragging={dragging !== null || undefined}>
       <datalist id="known-work">
-        {library.filter((s) => !s.rest).map((s) => <option key={s.label} value={s.label} />)}
+        {suggestions.map((label) => <option key={label} value={label} />)}
       </datalist>
       <datalist id="known-rest">
         {library.filter((s) => s.rest).map((s) => <option key={s.label} value={s.label} />)}
@@ -383,62 +389,71 @@ export function Builder({ plan, library, autoFocus, onChange }: Props) {
             </button>
           </header>
           <ol>
-            {block.steps.map((step) => (
-              <li
-                key={step.id}
-                className="b-step"
-                data-step={step.id}
-                data-rest={step.rest || undefined}
-                data-dragging={dragging === step.id || undefined}
-                onKeyDown={onArrows((up) => moveStep(step.id, up))}
-              >
-                <button className="b-grip" onPointerDown={startDrag('step', step.id)} {...tip('Drag to move', '⌥↑↓')}>
-                  <Icon name="grip" />
-                </button>
-                <button
-                  className="b-kind"
-                  onClick={() => editStep(step.id, { rest: !step.rest })}
-                  {...tip(step.rest ? 'Rest. Make it an exercise' : 'Exercise. Make it a rest')}
-                />
-                <input
-                  className="b-label"
-                  value={step.label}
-                  placeholder={step.rest ? 'Rest' : 'Exercise'}
-                  aria-label={step.rest ? 'Rest name' : 'Exercise name'}
-                  list={step.rest ? 'known-rest' : 'known-work'}
-                  autoComplete="off"
-                  enterKeyHint="next"
-                  onChange={(e) => pick(step, e.target.value, (e.nativeEvent as InputEvent).inputType)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+            {block.steps.map((step) => {
+              const demo = step.rest ? null : moveFor(step.label)
+              return (
+                <li
+                  key={step.id}
+                  className="b-step"
+                  data-step={step.id}
+                  data-rest={step.rest || undefined}
+                  data-demo={demo?.id}
+                  data-dragging={dragging === step.id || undefined}
+                  onKeyDown={onArrows((up) => moveStep(step.id, up))}
+                >
+                  <button className="b-grip" onPointerDown={startDrag('step', step.id)} {...tip('Drag to move', '⌥↑↓')}>
+                    <Icon name="grip" />
+                  </button>
+                  <button
+                    className="b-kind"
+                    onClick={() => editStep(step.id, { rest: !step.rest })}
+                    {...tip(step.rest ? 'Rest. Make it an exercise' : 'Exercise. Make it a rest')}
+                  />
+                  <input
+                    className="b-label"
+                    value={step.label}
+                    placeholder={step.rest ? 'Rest' : 'Exercise'}
+                    aria-label={step.rest ? 'Rest name' : 'Exercise name'}
+                    list={step.rest ? 'known-rest' : 'known-work'}
+                    autoComplete="off"
+                    enterKeyHint="next"
+                    onChange={(e) => pick(step, e.target.value, (e.nativeEvent as InputEvent).inputType)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+                        e.preventDefault()
+                        addStep(block.id, false, step.id)
+                      } else if (e.key === 'Backspace' && !step.label && !step.note) {
+                        e.preventDefault()
+                        removeStep(step.id, false)
+                      }
+                    }}
+                  />
+                  {demo && (
+                    <span className="b-demo" {...tip(`Shows a demo during the workout: ${demo.move.name}`)}>
+                      <Icon name="figure" />
+                    </span>
+                  )}
+                  <Duration seconds={step.seconds} onChange={(seconds) => editStep(step.id, { seconds }, `time${step.id}`)} />
+                  <button className="b-icon" onClick={() => removeStep(step.id)} {...tip('Remove (you can undo)')}>
+                    <Icon name="close" />
+                  </button>
+                  <input
+                    className="b-note"
+                    value={step.note}
+                    placeholder="Add a note: reps, weight, cues"
+                    aria-label="Note"
+                    autoComplete="off"
+                    enterKeyHint="next"
+                    onChange={(e) => editStep(step.id, { note: e.target.value }, `note${step.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' || e.metaKey || e.ctrlKey) return
                       e.preventDefault()
                       addStep(block.id, false, step.id)
-                    } else if (e.key === 'Backspace' && !step.label && !step.note) {
-                      e.preventDefault()
-                      removeStep(step.id, false)
-                    }
-                  }}
-                />
-                <Duration seconds={step.seconds} onChange={(seconds) => editStep(step.id, { seconds }, `time${step.id}`)} />
-                <button className="b-icon" onClick={() => removeStep(step.id)} {...tip('Remove (you can undo)')}>
-                  <Icon name="close" />
-                </button>
-                <input
-                  className="b-note"
-                  value={step.note}
-                  placeholder="Add a note: reps, weight, cues"
-                  aria-label="Note"
-                  autoComplete="off"
-                  enterKeyHint="next"
-                  onChange={(e) => editStep(step.id, { note: e.target.value }, `note${step.id}`)}
-                  onKeyDown={(e) => {
-                    if (e.key !== 'Enter' || e.metaKey || e.ctrlKey) return
-                    e.preventDefault()
-                    addStep(block.id, false, step.id)
-                  }}
-                />
-              </li>
-            ))}
+                    }}
+                  />
+                </li>
+              )
+            })}
           </ol>
           <footer>
             <button onClick={() => addStep(block.id, false)} {...tip('Add an exercise to this block', '⏎')}>

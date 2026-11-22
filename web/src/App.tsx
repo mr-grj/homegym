@@ -18,7 +18,7 @@ import { parseRoutine, stepLibrary, uniqueTimers, type Routine } from './routine
 import { baseLang } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
 import { arm, totalElapsed, type Run } from './timer'
-import { useWorkout, type Prefs } from './workout'
+import { PREFS, useWorkout, type Prefs } from './workout'
 
 type Panel = 'finish' | 'history' | 'help' | 'music' | 'voice' | { edit: RoutineRecord | null } | null
 type Toast = { id: number; text: string; undo?: () => void; editor?: boolean }
@@ -33,7 +33,8 @@ const sessionTimes = (run: Run, now: number): Pick<SessionInput, 'title' | 'star
 export default function App() {
   const [records, setRecords] = useState<RoutineRecord[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
-  const [prefs, setPrefs] = useSetting<Prefs>('homegym.prefs', { sound: true, voice: true, elapsed: false })
+  const [stored, setPrefs] = useSetting<Partial<Prefs>>('homegym.prefs', PREFS)
+  const prefs: Prefs = { ...PREFS, ...stored }
   const [recent, setRecent] = useSetting<string[]>('homegym.recent', [])
   const [voices, setVoices] = usePersistent<Record<string, string>>('homegym.voices', {})
   const [panel, setPanel] = useState<Panel>(null)
@@ -183,7 +184,12 @@ export default function App() {
   const fullscreen = () =>
     document.fullscreenElement ? void document.exitFullscreen() : void document.documentElement.requestFullscreen().catch(() => {})
 
-  const flip = (key: keyof Prefs) => setPrefs((p) => ({ ...p, [key]: !p[key] }))
+  const flip = (key: keyof Prefs) => setPrefs((p) => ({ ...PREFS, ...p, [key]: !{ ...PREFS, ...p }[key] }))
+
+  const flipDemos = () => {
+    flip('demos')
+    notify(prefs.demos ? 'Exercise demos off' : 'Exercise demos on', () => flip('demos'))
+  }
 
   const onKey = useEffectEvent((e: KeyboardEvent) => {
     if (e.defaultPrevented) return
@@ -209,6 +215,7 @@ export default function App() {
       t: () => flip('elapsed'),
       s: () => flip('sound'),
       v: () => flip('voice'),
+      d: flipDemos,
       f: fullscreen,
       h: () => setPanel('history'),
       '?': () => setPanel('help'),
@@ -312,6 +319,7 @@ export default function App() {
         <Stage
           run={run}
           elapsed={prefs.elapsed}
+          demos={prefs.demos}
           onToggle={workout.toggle}
           onSkip={workout.skip}
           onBack={workout.stepBack}

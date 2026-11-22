@@ -38,6 +38,12 @@ const icons = {
   minimize: <path d="M6 9l6 6 6-6" />,
   minus: <path d="M5 12h14" />,
   copy: <path d="M9 9h10v10H9zM15 9V5H5v10h4" />,
+  figure: (
+    <g>
+      <circle cx="12" cy="4.5" r="2" />
+      <path d="M12 8.5v6M12 14.5l-3.5 6M12 14.5l3.5 6M6.5 11l5.5-1.5 5.5 1.5" />
+    </g>
+  ),
   grip: (
     <g {...solid}>
       {[6, 12, 18].flatMap((y) => [9, 15].map((x) => <circle key={`${x}${y}`} cx={x} cy={y} r="1.5" />))}

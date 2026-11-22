@@ -24,6 +24,7 @@
 - **Routines your way.** Build them with fields (pick an exercise you used before, tap a duration, drag to reorder) or write them as plain text. Both show a live preview as you go.
 - **Readable from across the room.** Huge digits, colour-coded work and rest phases, a progress fill and a timeline of the whole routine.
 - **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and a voice that reads out the next exercise, using the most natural voice your device has or one you pick. The screen stays awake.
+- **See how it's done.** When an exercise starts, a small figure shows it on a loop. During a rest it previews what comes next, and it pauses with the timer. About 60 exercises are covered, in English and Romanian.
 - **Music that follows the timer.** Paste a YouTube Music or SoundCloud link: it plays when you start, pauses when you pause, gets quieter for the countdown and fades out at the end. Each playlist resumes where you left off.
 - **A log you'll actually keep.** At the end of a workout, tick the blocks you finished, rate the effort and add a note. History shows daily totals.
 - **Keyboard first, phone friendly.** Every action has a shortcut and a tooltip, and the layout adapts to small screens.
@@ -61,6 +62,7 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 | `Esc` | Stop and log |
 | `T` | Remaining or elapsed time |
 | `S` · `V` | Sound · voice |
+| `D` | Exercise demos on or off |
 | `M` · `[` · `]` | Music: play/pause, previous, next |
 | `H` · `?` | History · all shortcuts |
 | `⌘Z` | Undo what the last message offers to undo |
@@ -92,7 +94,7 @@ Glute bridge 30s
 
 ## Circuit ×3
 Plank 45s
-> shoulders over wrists · squeeze glutes
+> elbows under shoulders · squeeze glutes
 ~ Rest 15s
 Hollow hold 30s
 ~ Rest 15s
@@ -110,6 +112,21 @@ Hollow hold 30s
 The [`examples/`](examples) folder has ready-made routines for strength, HIIT, mobility, breathing and focused work. Paste one into **+ Routine** in the Text view and adjust it in either view.
 
 To make a variation of a routine, open it, change what you need and press **Save as new** (`⌘⇧⏎`). The original stays as it was, and the copy is named for you ("Full body (20 min) copy") unless you give it a new title.
+
+## Exercise demos
+
+When a step's name matches a known exercise, the timer shows a looping figure of it: above the clock on a phone, beside it on a wide screen. During a rest it previews the next exercise, it freezes while you're paused, and if your system asks for reduced motion it shows a still pose instead. A step whose name isn't known shows no figure, so a demo is never a guess.
+
+Names match whole, ignoring case, accents, plurals and punctuation: `Push-ups`, `push up` and `Flotări` all show the push-up. A `left` or `right` at the start or end picks the side (`Side plank, right`). In the builder, a small figure next to an exercise means it has a demo, and the suggestions offer every name that has one. Press `D` to hide or show demos.
+
+<details>
+<summary>Exercises with a demo</summary>
+
+Alternating lunge, Arm circles, Band pull-apart, Band shoulder press, Bent-over dumbbell row, Biceps curl, Bicycle crunch, Bird dog, Bodyweight squat, Burpee, Butt kicks, Calf raise, Calf stretch at the wall, Cat-cow, Chest opener, Child's pose, Cobra, Crunch, Dead bug, Deep squat hold, Downward dog, Dumbbell overhead press, Dumbbell reverse lunge, Dumbbell Romanian deadlift, Dumbbell thruster, Flutter kicks, Front raise, Glute bridge, Goblet squat, Half-kneeling hip flexor stretch, High knees, High plank, Hip hinge, Hollow hold, Inchworm, Jump squat, Jumping jack, Kettlebell deadlift, Kettlebell swing, Lateral raise, Leg raise, Mountain climber, Overhead triceps extension, Pigeon pose, Plank, Push-up, Reverse lunge, Romanian deadlift, Seated band row, Side plank, Sit-up, Skater hops, Standing band row, Standing hamstring stretch, Standing quad stretch, Star jump, Superman, V-up, Wall slide.
+
+</details>
+
+The figures are drawn by homegym itself from a few key poses per exercise, so they load instantly, work offline and follow your theme. [Open Exercise Figures](https://github.com/AbanoubAmir/open-exercise-figures) (CC0) was the reference for some of the poses.
 
 ## Music
 

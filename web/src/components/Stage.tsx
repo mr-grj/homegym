@@ -1,14 +1,17 @@
-import type { CSSProperties, MouseEvent } from 'react'
+import { useMemo, type CSSProperties, type MouseEvent } from 'react'
 import { clock } from '../format'
+import { demoStep, moveFor } from '../moves'
 import { totalSeconds } from '../routine'
 import { countdown, face, totalElapsed, type Run } from '../timer'
 import { useNow } from '../workout'
+import { Demo } from './Demo'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
 
 type Props = {
   run: Run
   elapsed: boolean
+  demos: boolean
   onToggle: () => void
   onSkip: () => void
   onBack: () => void
@@ -64,7 +67,7 @@ function Timeline({ run, progress, onJump }: { run: Run; progress: number; onJum
   )
 }
 
-export function Stage({ run, elapsed, onToggle, onSkip, onBack, onStop, onExtend, onJump, onMode }: Props) {
+export function Stage({ run, elapsed, demos, onToggle, onSkip, onBack, onStop, onExtend, onJump, onMode }: Props) {
   const now = useNow()
   const f = face(run, now, elapsed)
   const next = run.steps[run.index + 1]
@@ -73,6 +76,9 @@ export function Stage({ run, elapsed, onToggle, onSkip, onBack, onStop, onExtend
   const multi = run.steps.length > 1
   const state = run.finishedAt ? 'done' : run.since !== null ? 'running' : run.startedAt ? 'paused' : 'armed'
   const urgent = countdown(run, now) !== null
+  const slot = useMemo(() => demos && run.steps.some((s) => !s.rest && moveFor(s.label)), [demos, run.steps])
+  const shown = demoStep(run)
+  const demo = slot && shown ? moveFor(shown.label) : null
 
   return (
     <main className="stage" data-state={state} onClick={onToggle} style={{ '--p': f.progress } as CSSProperties}>
@@ -97,8 +103,23 @@ export function Stage({ run, elapsed, onToggle, onSkip, onBack, onStop, onExtend
       </header>
 
       <section className="face">
-        <div className={['time', f.display.length > 5 && 'long', urgent && 'urgent'].filter(Boolean).join(' ')}>
-          {f.display}
+        <div className="clock">
+          {slot && (
+            <div className="demo-slot">
+              {demo && (
+                <Demo
+                  key={`${demo.id}${demo.mirror}`}
+                  id={demo.id}
+                  move={demo.move}
+                  mirror={demo.mirror}
+                  playing={state === 'running' || state === 'armed'}
+                  dim={f.step.rest}
+                  restart={run.index}
+                />
+              )}
+            </div>
+          )}
+          <div className={['time', f.display.length > 5 && 'long', urgent && 'urgent'].filter(Boolean).join(' ')}>{f.display}</div>
         </div>
         {state !== 'done' && f.remaining !== null && (
           <button className="mode" onClick={(e) => (contain(e), onMode())} {...tip(f.elapsedMode ? 'Show time remaining' : 'Show time elapsed', 'T')}>

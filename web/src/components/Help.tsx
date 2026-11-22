@@ -7,6 +7,7 @@ const keys: [string, string][] = [
   ['Esc', 'Stop and log'],
   ['T', 'Remaining ↔ elapsed'],
   ['S · V', 'Sound · voice'],
+  ['D', 'Exercise demos on · off'],
   ['F', 'Fullscreen'],
   ['E', 'Edit current routine'],
   ['H', 'History'],
