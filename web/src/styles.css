@@ -117,18 +117,6 @@ kbd {
   .exit {
     margin-left: 4px;
   }
-
-  .timeline {
-    gap: 4px;
-  }
-
-  .tl-steps {
-    gap: 1px;
-  }
-
-  .tl-step {
-    min-width: 2px;
-  }
 }
 
 .app[data-phase='work'] {
@@ -678,6 +666,20 @@ kbd {
   color: var(--fg);
 }
 
+@media (max-width: 480px) {
+  .timeline {
+    gap: 4px;
+  }
+
+  .tl-steps {
+    gap: 1px;
+  }
+
+  .tl-step {
+    min-width: 2px;
+  }
+}
+
 .meta {
   display: flex;
   justify-content: space-between;
@@ -718,10 +720,35 @@ kbd {
   margin-bottom: 10px;
 }
 
-.demo-cue {
+.demo-slot[data-over] {
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-slot[data-over] .demo {
+  flex: 1 1 0;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+}
+
+.demo-over {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-cue[data-head] {
   position: absolute;
   left: 50%;
   translate: -50% calc(-100% - 4px);
+}
+
+.demo-cue {
   font-size: 0.72rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -813,6 +840,38 @@ kbd {
   .demo-slot {
     display: none;
   }
+
+  .stage {
+    --huge: clamp(3.25rem, min(25vw, 18vh), 24rem);
+    padding-bottom: 12px;
+  }
+
+  .stage .mode,
+  .stage .prep-cue {
+    margin-bottom: 2px;
+  }
+
+  .stage .label {
+    font-size: clamp(1.2rem, 6vh, 2rem);
+  }
+
+  .stage .next {
+    margin-top: 4px;
+  }
+}
+
+@media (max-height: 400px) {
+  .stage .mode,
+  .stage .note,
+  .stage .cue:empty {
+    display: none;
+  }
+}
+
+@media (max-height: 340px) {
+  .stage {
+    --huge: clamp(2.75rem, 15vh, 24rem);
+  }
 }
 
 .time {
@@ -865,6 +924,27 @@ kbd {
   }
 }
 
+.prep-cue {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--phase);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  animation: fade 0.3s ease-out;
+  transition: background 0.15s;
+}
+
+.prep-cue:hover,
+.prep-cue:focus-visible {
+  background: color-mix(in oklab, var(--phase) 12%, transparent);
+}
+
+.time.prep:not(.urgent) {
+  opacity: 0.6;
+}
+
 .label {
   font-size: clamp(1.5rem, 4.4vw, 3rem);
   font-weight: 650;
@@ -901,6 +981,131 @@ kbd {
   animation: breathe 5s ease-in-out infinite;
 }
 
+.cue:has(.water) {
+  position: relative;
+}
+
+.cue .water {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  gap: 7px;
+  padding: 3px 12px 3px 9px;
+  font-size: inherit;
+}
+
+.cue .glass {
+  width: 17px;
+  height: 20px;
+}
+
+@media (max-height: 400px) {
+  .cue .water {
+    padding-block: 1px;
+  }
+
+  .cue .glass {
+    width: 15px;
+    height: 18px;
+  }
+}
+
+.water {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 14px 3px 9px;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--rest) 30%, transparent);
+  color: var(--muted);
+  font: inherit;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, opacity 0.3s, visibility 0.3s;
+}
+
+.water:not([aria-disabled]):hover,
+.water:focus-visible {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--rest) 10%, transparent);
+  border-color: color-mix(in oklab, var(--rest) 55%, transparent);
+}
+
+.water:not([aria-disabled]):active .glass {
+  transform: scale(0.9);
+}
+
+.water[aria-disabled] {
+  cursor: default;
+}
+
+.water[aria-disabled]:has(.sip) {
+  border-style: dashed;
+}
+
+.water[data-hidden] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.water[data-pour] {
+  animation: water-in 0.5s ease-out var(--delay) both;
+}
+
+.glass {
+  width: 22px;
+  height: 26px;
+  overflow: visible;
+  transition: transform 0.1s;
+}
+
+.glass-edge {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+
+.glass .level {
+  transform: translateY(var(--drop));
+  transition: transform 0.3s linear;
+}
+
+.glass .wave {
+  fill: var(--rest);
+  opacity: 0.85;
+  animation: slosh 3s ease-in-out infinite alternate;
+}
+
+.glass .stream {
+  fill: var(--rest);
+  opacity: 0.85;
+  transform-origin: 50% 0;
+  transform-box: fill-box;
+  animation: stream 1.7s ease-in calc(var(--delay) + 0.15s) both;
+}
+
+.water[data-pour] .rise {
+  animation: rise-water 1.6s cubic-bezier(0.3, 0.6, 0.4, 1) calc(var(--delay) + 0.25s) both;
+}
+
+.sip {
+  position: absolute;
+  left: 22px;
+  top: -6px;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--rest);
+  pointer-events: none;
+  animation: sip 1s ease-out both;
+}
+
 .controls {
   display: flex;
   justify-content: center;
@@ -935,6 +1140,30 @@ kbd {
   font-size: 1.6rem;
   color: var(--bg);
   background: var(--fg);
+}
+
+@media (max-width: 360px) {
+  .controls button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .controls .primary {
+    width: 68px;
+    height: 68px;
+  }
+}
+
+@media (max-height: 520px) {
+  .controls button {
+    width: 46px;
+    height: 46px;
+  }
+
+  .controls .primary {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 .controls .primary:hover {
@@ -2989,6 +3218,47 @@ kbd {
 @keyframes spin {
   to {
     transform: rotate(1turn);
+  }
+}
+
+@keyframes water-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes rise-water {
+  from {
+    transform: translateY(18px);
+  }
+}
+
+@keyframes stream {
+  0% {
+    transform: scaleY(0);
+  }
+  12%,
+  70% {
+    transform: none;
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(20px) scaleY(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes slosh {
+  to {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes sip {
+  to {
+    opacity: 0;
+    transform: translateY(-18px);
   }
 }
 

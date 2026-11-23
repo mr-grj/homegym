@@ -1,14 +1,38 @@
-import { useEffect, useEffectEvent, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from 'react'
 import { music } from './music'
 import type { Routine } from './routine'
 import { baseLang, cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
 import { usePersistent } from './store'
-import { advance, arm, back, countdown, extend, face, finish, jump, pause, play, type Run } from './timer'
+import {
+  advance,
+  arm,
+  back,
+  countdown,
+  extend,
+  face,
+  finish,
+  jump,
+  pause,
+  play,
+  PREP_SECONDS,
+  prepFor,
+  preparing,
+  ready,
+  SIP_SECONDS,
+  stepElapsed,
+  withPrep,
+  type Run,
+} from './timer'
 
-export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean; demos: boolean }
+export type Prefs = { sound: boolean; voice: boolean; elapsed: boolean; demos: boolean; prep: boolean; water: boolean }
 
-export const PREFS: Prefs = { sound: true, voice: true, elapsed: false, demos: true }
+export const PREFS: Prefs = { sound: true, voice: true, elapsed: false, demos: true, prep: true, water: true }
 
+/** Milliseconds into a rest when the water glass fills. */
+export const POUR_DELAY = 1500
+
+/** A sip taken during the current rest: how many so far, and the step time of the last one. */
+export type Sips = { count: number; at: number }
 const TICK_MS = 100
 const TICKER = 'onmessage = (e) => setInterval(() => postMessage(0), e.data)'
 
@@ -83,8 +107,12 @@ type Options = {
 
 /** The timer on screen: its state, ticking, cues, music that follows it, and every control. */
 export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
-  const [run, setRun] = usePersistent<Run | null>('homegym.run', null)
+  const [stored, setRun] = usePersistent<Run | null>('homegym.run', null)
   const lastLeft = useRef(0)
+  const prepping = useRef(false)
+  const [sipped, setSipped] = useState({ index: -1, count: 0, at: 0 })
+  const prepMs = prefs.prep ? PREP_SECONDS * 1000 : 0
+  const run = stored && !stored.routine.quick && (stored.prep ?? 0) !== prepMs ? withPrep(stored, prepMs, Date.now()) : stored
   const running = run?.since != null
 
   const title = (time: number) => {
@@ -97,13 +125,22 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
 
   const announce = (next: Run) => {
     const step = next.steps[next.index]
-    if (prefs.sound) (step.rest ? cue.rest : cue.work)()
-    vibrate(step.rest ? [80] : [120, 60, 120])
+    const prep = preparing(next, Date.now())
+    prepping.current = prep
+    setSipped({ index: -1, count: 0, at: 0 })
+    if (prefs.sound) (prep ? cue.ready : step.rest ? cue.rest : cue.work)()
+    vibrate(prep ? [60] : step.rest ? [80] : [120, 60, 120])
     if (!prefs.voice || next.routine.quick) return
     music.duck(2800)
     const after = next.steps[next.index + 1]
     const text = step.rest && after ? `${step.label}. ${phrases(next.routine.lang).next}: ${after.label}` : step.label
     setTimeout(() => say(text, next.routine.lang), 350)
+  }
+
+  const go = () => {
+    prepping.current = false
+    if (prefs.sound) cue.work()
+    vibrate([120, 60, 120])
   }
 
   const follow = (playing: boolean) => {
@@ -133,10 +170,13 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
       return
     }
     document.title = title(t)
+    const prep = stepElapsed(run, t) < 0
+    if (prepping.current && !prep) go()
+    prepping.current = prep
     const left = countdown(run, t) ?? 0
     if (left >= 1 && left !== lastLeft.current) {
       if (prefs.sound) cue.tick()
-      if (prefs.sound || prefs.voice) music.duck(left * 1000 + (prefs.voice && !run.routine.quick ? 2600 : 900))
+      if (prefs.sound || prefs.voice) music.duck(left * 1000 + (prefs.voice && !run.routine.quick && !prep ? 2600 : 900))
     }
     lastLeft.current = left
   })
@@ -151,6 +191,10 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     document.title = title(now)
   }, [run, prefs.elapsed])
 
+  useEffect(() => {
+    if (run !== stored) setRun(run)
+  }, [run, stored])
+
   useWakeLock(running)
 
   const update = (next: Run, speakIfMoved = true) => {
@@ -158,7 +202,8 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     setRun(next)
     setNow(t)
     if ((run?.since != null) !== (next.since != null) && !next.finishedAt) follow(next.since != null)
-    if (speakIfMoved && next.since !== null && next.offset === 0) announce(next)
+    if (speakIfMoved && next.since !== null && next.offset === -prepFor(next, next.index)) announce(next)
+    else prepping.current = preparing(next, t)
   }
 
   const toggle = () => {
@@ -194,6 +239,25 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     update(extend(run, seconds, Date.now()), false)
   }
 
+  const goNow = () => {
+    if (!run) return
+    const t = Date.now()
+    if (!preparing(run, t)) return
+    update(ready(run, t), false)
+    if (run.since !== null) go()
+  }
+
+  const sip = () => {
+    const step = run?.steps[run.index]
+    if (!run || !step?.rest || step.seconds === null || !run.startedAt || run.finishedAt || !prefs.water) return
+    const at = stepElapsed(run, Date.now())
+    if (sipped.index === run.index && at >= sipped.at && at - sipped.at < SIP_SECONDS * 1000) return
+    extendBy(SIP_SECONDS)
+    setSipped({ index: run.index, count: sipped.index === run.index ? sipped.count + 1 : 1, at })
+  }
+
+  const sips: Sips | null = run && sipped.index === run.index ? { count: sipped.count, at: sipped.at } : null
+
   const stop = () => {
     if (!run) return
     if (!run.startedAt || (run.finishedAt && run.routine.quick)) return setRun(null)
@@ -217,9 +281,9 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
 
   const open = (routine: Routine) => {
     unlockAudio()
-    setRun(arm(routine))
+    setRun(arm(routine, prepMs))
     setNow(Date.now())
   }
 
-  return { run, running, setRun, toggle, skip, stepBack, jumpTo, extendBy, stop, startQuick, open }
+  return { run, running, sips, setRun, toggle, skip, stepBack, jumpTo, extendBy, goNow, sip, stop, startQuick, open }
 }

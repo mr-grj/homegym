@@ -1,7 +1,26 @@
 import { describe, expect, test } from 'vitest'
 import { clock, human } from './format'
 import { parseRoutine, quickRoutine } from './routine'
-import { advance, arm, back, countdown, extend, face, finish, jump, pause, play, stepElapsed, stepRemaining, totalElapsed } from './timer'
+import {
+  advance,
+  arm,
+  back,
+  countdown,
+  extend,
+  face,
+  finish,
+  jump,
+  pause,
+  plannedSeconds,
+  play,
+  preparing,
+  prepFor,
+  ready,
+  stepElapsed,
+  stepRemaining,
+  totalElapsed,
+  withPrep,
+} from './timer'
 
 const T0 = Date.UTC(2026, 10, 20, 7, 0, 0)
 const at = (seconds: number) => T0 + seconds * 1000
@@ -132,6 +151,78 @@ describe('face', () => {
   test('a finished run shows the total', () => {
     const done = advance(play(arm(quickRoutine('90s')!), at(0)), at(100))
     expect(face(done, at(200), false)).toMatchObject({ display: '1:30', progress: 1 })
+  })
+})
+
+describe('prep', () => {
+  const PREP = 5000
+  const prepped = parseRoutine('# P\nWork 30s\n~ Rest 30s\nNext 20s\nShort 5s\nOpen\n~ Switch 15s')
+
+  test('applies only to timed exercises of ten seconds or more', () => {
+    const run = arm(prepped, PREP)
+    expect(prepped.steps.map((_, i) => prepFor(run, i))).toEqual([PREP, 0, PREP, 0, 0, 0])
+    expect(prepFor(arm(prepped), 0)).toBe(0)
+    expect(arm(quickRoutine('5m')!).offset).toBe(0)
+  })
+
+  test('the first exercise waits for its prep, then runs its full length', () => {
+    const run = play(arm(prepped, PREP), at(0))
+    expect(preparing(arm(prepped, PREP), at(0))).toBe(false)
+    expect(preparing(run, at(4.9))).toBe(true)
+    expect(face(run, at(0.2), false)).toMatchObject({ preparing: true, display: '5', progress: 0 })
+    expect(face(run, at(4.5), false).display).toBe('1')
+    expect(stepRemaining(run, at(2))).toBe(30000)
+    expect(face(run, at(5), false)).toMatchObject({ preparing: false, display: '0:30' })
+    expect(advance(run, at(34.9))).toBe(run)
+    expect(advance(run, at(35.5)).index).toBe(1)
+  })
+
+  test('counts down the prep and hands over from a rest without beeping twice', () => {
+    const run = play(arm(prepped, PREP), at(0))
+    expect(countdown(run, at(1.9))).toBeNull()
+    expect([2, 3, 4.5].map((s) => countdown(run, at(s)))).toEqual([3, 2, 1])
+    expect(countdown(run, at(32))).toBe(3)
+    const rest = advance(run, at(35))
+    expect(countdown(rest, at(63))).toBeNull()
+    const next = jump(rest, 2, at(63))
+    expect(stepElapsed(next, at(63))).toBe(-PREP)
+    expect(countdown(next, at(66))).toBe(2)
+  })
+
+  test('advance carries the overshoot into the next prep', () => {
+    const run = play(arm(prepped, PREP), at(0))
+    const next = advance(run, at(66))
+    expect(next.index).toBe(2)
+    expect(stepElapsed(next, at(66))).toBe(-4000)
+    const after = advance(run, at(91))
+    expect(after.index).toBe(3)
+    expect(stepElapsed(after, at(91))).toBe(1000)
+    expect(totalElapsed(after, at(91))).toBe(91000)
+  })
+
+  test('ready starts the exercise now and does nothing after the prep', () => {
+    const run = play(arm(prepped, PREP), at(0))
+    const now = ready(run, at(2))
+    expect(stepElapsed(now, at(2))).toBe(0)
+    expect(stepElapsed(ready(now, at(10)), at(10))).toBe(8000)
+    expect(totalElapsed(now, at(3))).toBe(3000)
+  })
+
+  test('turning prep off ends a running prep and skips later ones', () => {
+    const run = withPrep(play(arm(prepped, PREP), at(0)), 0, at(1))
+    expect(stepElapsed(run, at(1))).toBe(0)
+    expect(jump(run, 2, at(1)).offset).toBe(0)
+    expect(withPrep(arm(prepped), PREP, at(0)).prep).toBe(PREP)
+  })
+
+  test('planned length includes prep time', () => {
+    expect(plannedSeconds(arm(parseRoutine('A 30s\n~ R 30s\nB 20s'), PREP))).toBe(90)
+    expect(plannedSeconds(arm(prepped, PREP))).toBeNull()
+  })
+
+  test('extend during prep keeps the step at least a second long', () => {
+    const run = play(arm(prepped, PREP), at(0))
+    expect(extend(run, -60, at(1)).steps[0].seconds).toBe(1)
   })
 })
 

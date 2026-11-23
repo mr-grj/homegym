@@ -24,6 +24,8 @@
 - **Routines your way.** Build them with fields (pick an exercise you used before, tap a duration, drag to reorder) or write them as plain text. Both show a live preview as you go.
 - **Readable from across the room.** Huge digits, colour-coded work and rest phases, a progress fill and a timeline of the whole routine.
 - **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and a voice that reads out the next exercise, using the most natural voice your device has or one you pick. The screen stays awake.
+- **Time to get into position.** Each timed exercise of 10 seconds or more opens with five seconds to set up, shown as a big countdown with the figure in its start pose, then the clock starts. Tap "Get into position" or press `G` to start early, or press `R` to turn it off.
+- **A reminder to drink.** Every rest shows a small glass filling with water next to what comes up. Tap it, or press `W`, to add 15 seconds to the rest; it refills once you've used them. Both this and the time to get into position can be switched off in the workout options (`O`).
 - **See how it's done.** When an exercise starts, a small figure shows it on a loop. During a rest it previews what comes next, marked "Up next", and it pauses with the timer. About 160 exercises are covered, in English and Romanian.
 - **Music that follows the timer.** Paste a YouTube Music or SoundCloud link: it plays when you start, pauses when you pause, gets quieter for the countdown and fades out at the end. Each playlist resumes where you left off.
 - **Time boxes, not rep counts.** Made for home workouts with whatever you have, like one kettlebell. Each exercise gets the time you choose and you fit in as many good reps as you can. To progress, lengthen the steps or add rounds.
@@ -46,7 +48,7 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 ## Using it
 
 <p align="center">
-  <img src="docs/screenshots/journey.png" alt="A workout on a phone, start to finish: picking a routine, a goblet squat with its looping figure, a rest previewing the band row under Up next, and the finish sheet with effort and a note" width="900">
+  <img src="docs/screenshots/journey.png" alt="A workout on a phone, start to finish: picking a routine, a goblet squat with its looping figure, a rest previewing the band row under Up next with a glass of water, and the finish sheet with effort and a note" width="900">
 </p>
 
 | Type into the clock | Result |
@@ -66,6 +68,9 @@ Open [http://localhost:4321](http://localhost:4321). Set `HOMEGYM_PORT` to use a
 | `T` | Remaining or elapsed time |
 | `S` · `V` | Sound · voice |
 | `D` | Exercise demos on or off |
+| `R` · `G` | Get into position time (5 seconds before each exercise) on or off · start the exercise now |
+| `W` | During a rest: take a sip, adds 15 seconds |
+| `O` | Workout options: get into position time, water reminder, exercise demos |
 | `M` · `[` · `]` | Music: play/pause, previous, next |
 | `H` · `?` | History · all shortcuts |
 | `⌘Z` | Undo what the last message offers to undo |

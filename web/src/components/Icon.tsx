@@ -41,6 +41,7 @@ const icons = {
   search: <path d="M10.5 17.5a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20.5 20.5l-5-5" />,
   calendar: <path d="M5 5.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1zM4 10h16M8.5 3.5v4M15.5 3.5v4" />,
   minus: <path d="M5 12h14" />,
+  options: <path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM9 19.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />,
   copy: <path d="M9 9h10v10H9zM15 9V5H5v10h4" />,
   figure: (
     <g>

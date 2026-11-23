@@ -11,9 +11,14 @@ test('the figure shows the exercise, previews the next one during a rest and fol
   await expect(demo(app)).not.toHaveAttribute('data-dim')
 
   await shortcut(app, 'Space')
-  const before = await body(app).getAttribute('points')
-  await app.clock.runFor(500)
-  await expect(body(app)).not.toHaveAttribute('points', before!)
+  await expect(app.locator('.prep-cue')).toBeVisible()
+  await expect(demo(app)).not.toHaveAttribute('data-playing')
+  const start = await body(app).getAttribute('points')
+  await app.clock.runFor(2000)
+  await expect(body(app)).toHaveAttribute('points', start!)
+  await app.clock.runFor(3500)
+  await expect(demo(app)).toHaveAttribute('data-playing')
+  await expect(body(app)).not.toHaveAttribute('points', start!)
 
   for (let i = 0; i < 5; i++) await shortcut(app, 'ArrowRight')
   await expect(app.locator('.label')).toHaveText('Switch')
@@ -25,7 +30,7 @@ test('the figure shows the exercise, previews the next one during a rest and fol
   await expect(app.locator('.label')).toHaveText('Band row')
   await expect(demo(app)).toHaveAttribute('data-move', 'standingBandRow')
   await expect(demo(app)).not.toHaveAttribute('data-dim')
-  await expect(app.locator('.demo-cue')).toHaveCount(0)
+  await expect(app.locator('.demo-over')).toHaveCount(0)
 
   await shortcut(app, 'Space')
   await expect(demo(app)).not.toHaveAttribute('data-playing')

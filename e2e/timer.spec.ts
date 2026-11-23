@@ -167,7 +167,7 @@ test.describe('with the real clock', () => {
   test('a reload keeps the running timer', async ({ app }) => {
     await app.locator('.chip-main', { hasText: 'Core' }).click()
     await shortcut(app, 'Space')
-    await expect(app.locator('.time')).toHaveText('0:28', { timeout: 4000 })
+    await expect(app.locator('.time')).toHaveText('0:28', { timeout: 9000 })
     await app.reload()
     await expect(app.locator('.stage')).toHaveAttribute('data-state', 'running')
     await expect(app.locator('.label')).toHaveText('Dead bug')
