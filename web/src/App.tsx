@@ -9,6 +9,7 @@ import { Launcher } from './components/Launcher'
 import { Logo } from './components/Logo'
 import { Modal } from './components/Modal'
 import { MusicDock, MusicPicker } from './components/Music'
+import { Options } from './components/Options'
 import { tip, Tooltips } from './components/Tooltips'
 import { exitLabel, Stage } from './components/Stage'
 import { VoicePicker } from './components/Voice'
@@ -17,10 +18,10 @@ import { music, parseMusic, resolveSource, useMusic, type Source } from './music
 import { parseRoutine, stepLibrary, uniqueTimers, type Routine } from './routine'
 import { baseLang } from './sound'
 import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
-import { arm, totalElapsed, type Run } from './timer'
+import { arm, PREP_SECONDS, totalElapsed, type Run } from './timer'
 import { PREFS, useWorkout, type Prefs } from './workout'
 
-type Panel = 'finish' | 'history' | 'help' | 'music' | 'voice' | { edit: RoutineRecord | null } | null
+type Panel = 'finish' | 'history' | 'help' | 'music' | 'voice' | 'options' | { edit: RoutineRecord | null } | null
 type Toast = { id: number; text: string; undo?: () => void; editor?: boolean }
 
 const sessionTimes = (run: Run, now: number): Pick<SessionInput, 'title' | 'started_at' | 'ended_at' | 'seconds'> => ({
@@ -147,7 +148,7 @@ export default function App() {
       const saved = id === null ? await api.createRoutine(source) : await api.updateRoutine(id, source)
       await loadRoutines()
       setPanel(null)
-      if (run && !run.startedAt && run.routine.id === saved.id) workout.setRun(arm(parseRoutine(saved.source, saved.id)))
+      if (run && !run.startedAt && run.routine.id === saved.id) workout.setRun(arm(parseRoutine(saved.source, saved.id), run.prep))
     } catch {
       notify('Could not save the routine')
     }
@@ -191,6 +192,11 @@ export default function App() {
     notify(prefs.demos ? 'Exercise demos off' : 'Exercise demos on', () => flip('demos'))
   }
 
+  const flipPrep = () => {
+    flip('prep')
+    notify(prefs.prep ? 'Get into position time off' : `Get into position time on · ${PREP_SECONDS}s before each exercise`, () => flip('prep'))
+  }
+
   const onKey = useEffectEvent((e: KeyboardEvent) => {
     if (e.defaultPrevented) return
     const target = e.target instanceof Element ? e.target : null
@@ -216,8 +222,10 @@ export default function App() {
       s: () => flip('sound'),
       v: () => flip('voice'),
       d: flipDemos,
+      r: flipPrep,
       f: fullscreen,
       h: () => setPanel('history'),
+      o: () => setPanel('options'),
       '?': () => setPanel('help'),
       m: () => (music.state.source ? music.toggle() : setPanel('music')),
       '[': music.prev,
@@ -236,6 +244,8 @@ export default function App() {
       ArrowUp: () => workout.extendBy(60),
       '+': () => workout.extendBy(60),
       '=': () => workout.extendBy(60),
+      w: workout.sip,
+      g: workout.goNow,
       ArrowDown: () => workout.extendBy(-60),
       '-': () => workout.extendBy(-60),
       Escape: workout.stop,
@@ -277,6 +287,7 @@ export default function App() {
     ['music', hasMusic ? 'Change music' : 'Add music: paste a YouTube or SoundCloud link', '⌘V', () => setPanel('music'), hasMusic || undefined],
     [prefs.sound ? 'sound' : 'mute', `Beeps and chimes ${prefs.sound ? 'on' : 'off'}`, 'S', () => flip('sound'), prefs.sound],
     ['voice', `Voice ${prefs.voice ? 'on' : 'off'}: pick how it sounds`, 'V', () => setPanel('voice'), prefs.voice],
+    ['options', 'Workout options: get into position time, water reminder, demos', 'O', () => setPanel('options')],
     ['expand', 'Fullscreen', 'F', fullscreen],
     ['history', 'History: everything you logged', 'H', () => setPanel('history')],
     ['help', 'Shortcuts and formats', '?', () => setPanel('help')],
@@ -320,6 +331,8 @@ export default function App() {
           run={run}
           elapsed={prefs.elapsed}
           demos={prefs.demos}
+          water={prefs.water}
+          sips={workout.sips}
           onToggle={workout.toggle}
           onSkip={workout.skip}
           onBack={workout.stepBack}
@@ -327,6 +340,8 @@ export default function App() {
           onExtend={workout.extendBy}
           onJump={workout.jumpTo}
           onMode={() => flip('elapsed')}
+          onSip={workout.sip}
+          onGo={workout.goNow}
         />
       ) : (
         <Launcher
@@ -365,6 +380,11 @@ export default function App() {
             onToggle={() => flip('voice')}
             onChoose={(lang, name) => setVoices((v) => ({ ...v, [lang]: name ?? '' }))}
           />
+        </Modal>
+      )}
+      {panel === 'options' && (
+        <Modal onClose={() => setPanel(null)}>
+          <Options prefs={prefs} onFlip={flip} />
         </Modal>
       )}
       {panel === 'help' && (

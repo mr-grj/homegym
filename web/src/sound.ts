@@ -25,6 +25,7 @@ function tone(frequency: number, duration: number, delay = 0, volume = 0.22) {
 
 export const cue = {
   tick: () => tone(880, 0.09),
+  ready: () => tone(660, 0.22, 0, 0.14),
   work: () => {
     tone(660, 0.14)
     tone(990, 0.34, 0.13)

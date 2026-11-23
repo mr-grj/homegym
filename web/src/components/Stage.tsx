@@ -1,18 +1,20 @@
-import { useMemo, type CSSProperties, type MouseEvent } from 'react'
+import { useMemo, useSyncExternalStore, type CSSProperties, type MouseEvent } from 'react'
 import { clock } from '../format'
 import { headroom } from '../figure'
 import { demoStep, moveFor } from '../moves'
-import { totalSeconds } from '../routine'
-import { countdown, face, totalElapsed, type Run } from '../timer'
-import { useNow } from '../workout'
+import { countdown, face, plannedSeconds, SIP_SECONDS, stepElapsed, totalElapsed, type Run } from '../timer'
+import { POUR_DELAY, useNow, type Sips } from '../workout'
 import { Demo } from './Demo'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
+import { Water } from './Water'
 
 type Props = {
   run: Run
   elapsed: boolean
   demos: boolean
+  water: boolean
+  sips: Sips | null
   onToggle: () => void
   onSkip: () => void
   onBack: () => void
@@ -20,9 +22,19 @@ type Props = {
   onExtend: (seconds: number) => void
   onJump: (index: number) => void
   onMode: () => void
+  onSip: () => void
+  onGo: () => void
 }
 
 const contain = (e: MouseEvent) => e.stopPropagation()
+
+const roomy =
+  typeof matchMedia === 'function' ? matchMedia('(min-height: 680px), (min-aspect-ratio: 4 / 3) and (min-width: 900px) and (min-height: 521px)') : null
+const watchRoomy = (change: () => void) => {
+  roomy?.addEventListener('change', change)
+  return () => roomy?.removeEventListener('change', change)
+}
+const useRoomy = () => useSyncExternalStore(watchRoomy, () => roomy?.matches ?? true)
 
 /** What leaving the stage does right now, for buttons and hints. */
 export function exitLabel(run: Run) {
@@ -68,18 +80,34 @@ function Timeline({ run, progress, onJump }: { run: Run; progress: number; onJum
   )
 }
 
-export function Stage({ run, elapsed, demos, onToggle, onSkip, onBack, onStop, onExtend, onJump, onMode }: Props) {
+export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSkip, onBack, onStop, onExtend, onJump, onMode, onSip, onGo }: Props) {
   const now = useNow()
   const f = face(run, now, elapsed)
   const next = run.steps[run.index + 1]
   const block = run.routine.blocks[f.step.block]
-  const total = totalSeconds(run.steps)
+  const total = plannedSeconds(run)
   const multi = run.steps.length > 1
   const state = run.finishedAt ? 'done' : run.since !== null ? 'running' : run.startedAt ? 'paused' : 'armed'
   const urgent = countdown(run, now) !== null
   const slot = useMemo(() => demos && run.steps.some((s) => !s.rest && moveFor(s.label)), [demos, run.steps])
   const shown = demoStep(run)
   const demo = slot && shown ? moveFor(shown.label) : null
+  const into = stepElapsed(run, now)
+  const tall = useRoomy()
+  const drinking = !!sips && into >= sips.at && into - sips.at < SIP_SECONDS * 1000
+  const refills = sips ? sips.count - (drinking ? 1 : 0) : 0
+  const glass = drinks && state !== 'done' && run.startedAt && f.step.rest && (
+    <Water
+      key={`${run.index}-${refills}`}
+      delay={refills ? 0 : state === 'running' && into < POUR_DELAY ? POUR_DELAY - into : null}
+      hidden={state !== 'running'}
+      drunk={sips && drinking ? (into - sips.at) / (SIP_SECONDS * 1000) : null}
+      open={f.step.seconds === null}
+      sips={sips?.count ?? 0}
+      onSip={onSip}
+    />
+  )
+  const above = !!demo && f.step.rest && tall
 
   return (
     <main className="stage" data-state={state} onClick={onToggle} style={{ '--p': f.progress } as CSSProperties}>
@@ -106,28 +134,40 @@ export function Stage({ run, elapsed, demos, onToggle, onSkip, onBack, onStop, o
       <section className="face">
         <div className="clock">
           {slot && (
-            <div className="demo-slot">
+            <div className="demo-slot" data-over={above || undefined}>
+              {above && (
+                <div className="demo-over">
+                  <span className="demo-cue">Up next</span>
+                  {glass}
+                </div>
+              )}
               {demo && (
                 <Demo
                   key={`${demo.id}${demo.mirror}`}
                   id={demo.id}
                   move={demo.move}
                   mirror={demo.mirror}
-                  playing={state === 'running' || state === 'armed'}
+                  playing={(state === 'running' && !f.preparing) || state === 'armed'}
                   dim={f.step.rest}
-                  restart={run.index}
+                  restart={run.index * 2 + (f.preparing ? 0 : 1)}
                 />
               )}
-              {demo && f.step.rest && (
-                <span className="demo-cue" style={{ top: `${headroom(demo.move) * 100}%` }}>
+              {demo && f.step.rest && !above && (
+                <span className="demo-cue" data-head style={{ top: `${headroom(demo.move) * 100}%` }}>
                   Up next
                 </span>
               )}
             </div>
           )}
-          <div className={['time', f.display.length > 5 && 'long', urgent && 'urgent'].filter(Boolean).join(' ')}>{f.display}</div>
+          <div className={['time', f.display.length > 5 && 'long', urgent && 'urgent', f.preparing && 'prep'].filter(Boolean).join(' ')}>
+            {f.display}
+          </div>
         </div>
-        {state !== 'done' && f.remaining !== null && (
+        {f.preparing ? (
+          <button className="prep-cue" onClick={(e) => (contain(e), onGo())} {...tip('Ready? Start the exercise now', 'G')}>
+            Get into position
+          </button>
+        ) : state !== 'done' && f.remaining !== null && (
           <button className="mode" onClick={(e) => (contain(e), onMode())} {...tip(f.elapsedMode ? 'Show time remaining' : 'Show time elapsed', 'T')}>
             {f.elapsedMode ? 'elapsed' : 'remaining'}
           </button>
@@ -144,6 +184,7 @@ export function Stage({ run, elapsed, demos, onToggle, onSkip, onBack, onStop, o
           {state === 'armed' && <>Tap anywhere or press space to start<span className="keys-only"> · Esc to go back</span></>}
           {state === 'paused' && <>Paused<span className="keys-only"> · Esc to stop</span></>}
           {state === 'done' && (run.routine.quick ? 'Logged · tap to close' : 'Tap to finish')}
+          {!above && glass}
         </p>
       </section>
 

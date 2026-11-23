@@ -64,7 +64,7 @@ test.describe('touch', () => {
     const stage = app.locator('.stage')
     await stage.locator('.face').tap()
     await expect(stage).toHaveAttribute('data-state', 'running')
-    await app.clock.runFor(3000)
+    await app.clock.runFor(8000)
     await stage.locator('.face').tap()
     await expect(stage).toHaveAttribute('data-state', 'paused')
     await expect(app.locator('.time')).toHaveText('0:27')

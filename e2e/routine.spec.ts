@@ -3,6 +3,7 @@ import { countDown, expect, recorded, shortcut, test } from './fixtures'
 const WORK = [660, 990]
 const REST = [660, 440]
 const TICK = [880]
+const READY = [660]
 
 test('a routine moves through work and rest with cues and controls', async ({ app }) => {
   await app.locator('.chip-main', { hasText: 'Core' }).click()
@@ -16,7 +17,11 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
   await shortcut(app, 'Space')
   await app.clock.runFor(400)
   await expect(app.locator('.app')).toHaveAttribute('data-phase', 'work')
-  await app.clock.runFor(25_600)
+  await expect(app.locator('.prep-cue')).toHaveText('Get into position')
+  await app.clock.runFor(4600)
+  await expect(app.locator('.time')).toHaveText('0:30')
+  await expect(app.locator('.prep-cue')).toHaveCount(0)
+  await app.clock.runFor(26_000)
   await expect(app.locator('.time')).toHaveText('0:04')
   await countDown(app, '0:03', '0:02', '0:01')
   await expect(app.locator('.time.urgent')).toBeVisible()
@@ -39,13 +44,15 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
 
   await shortcut(app, 'ArrowLeft')
   await expect(label).toHaveText('Plank')
-  await app.clock.runFor(4000)
+  await app.clock.runFor(9000)
+  await expect(app.locator('.time')).toHaveText('0:41')
   await shortcut(app, 'ArrowLeft')
   await expect(label).toHaveText('Plank')
-  await expect(app.locator('.time')).toHaveText('0:45')
+  await expect(app.locator('.time')).toHaveText('5')
 
   const { tones } = await recorded(app)
-  expect(tones).toEqual([...WORK, ...TICK, ...TICK, ...TICK, ...WORK, ...WORK, ...REST, ...WORK, ...WORK])
+  const countdown = [...TICK, ...TICK, ...TICK]
+  expect(tones).toEqual([...READY, ...countdown, ...WORK, ...countdown, ...READY, ...READY, ...REST, ...READY, ...countdown, ...WORK, ...READY])
 
   await app.locator('.tl-step').first().click()
   await expect(label).toHaveText('Dead bug')
@@ -81,15 +88,15 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
 test('a routine that runs to the end opens the finish sheet', async ({ app }) => {
   await app.locator('.chip-main', { hasText: 'Breathing' }).click()
   await app.locator('.stage').click()
-  await app.clock.runFor(183_000)
+  await app.clock.runFor(188_000)
   const finish = app.locator('.finish')
   await expect(finish.locator('.eyebrow')).toHaveText('Complete')
-  await expect(finish.locator('.big')).toHaveText('3:02')
+  await expect(finish.locator('.big')).toHaveText('3:07')
   await expect(finish.locator('.count')).toHaveText('2/2 completed')
   await expect.poll(async () => (await recorded(app)).speech.at(-1)).toBe('Done')
   await app.keyboard.press('Enter')
   await expect(app.locator('.toast')).toContainText('Workout saved')
-  await expect(app.locator('.today')).toHaveText('Today · 1 logged · 3m 2s')
+  await expect(app.locator('.today')).toHaveText('Today · 1 logged · 3m 7s')
 })
 
 test('discarding a workout logs nothing', async ({ app }) => {
@@ -115,7 +122,7 @@ test('sound and voice switches mute the cues and are remembered', async ({ app }
   await expect(app.locator('[data-tool=voice]')).toHaveAttribute('data-off')
   await app.locator('.chip-main', { hasText: 'Core' }).click()
   await shortcut(app, 'Space')
-  await app.clock.runFor(31_000)
+  await app.clock.runFor(36_000)
   await expect(app.locator('.label')).toHaveText('Glute bridge')
   const { tones, speech } = await recorded(app)
   expect(tones).toEqual([])
@@ -132,7 +139,7 @@ test('the edit shortcut opens the running routine', async ({ app }) => {
   await shortcut(app, 'Space')
   await shortcut(app, 'e')
   await expect(app.locator('.editor h2')).toHaveText('Edit routine')
-  await app.clock.runFor(3000)
+  await app.clock.runFor(8000)
   await expect(app.locator('.b-title')).toHaveValue('Core (10 min)')
   await app.locator('.b-title').press('Escape')
   await expect(app.locator('.editor')).toHaveCount(0)
