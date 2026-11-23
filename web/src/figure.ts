@@ -16,17 +16,18 @@ export type Pose = {
   leg: Leg
   farLeg?: Leg
   lift?: number
+  grip?: number
   shorten?: Partial<Record<Segment, number>>
   t?: number
   hold?: number
 }
 
-type Hand = 'near' | 'far' | 'both'
+type Hand = 'near' | 'far' | 'both' | 'pass'
 type Anchor = 'hand' | 'farHand' | 'foot' | 'farFoot' | 'knee' | 'farKnee' | Point
 export type Joint = 'hip' | 'shoulder' | 'head' | 'knee' | 'farKnee' | 'ankle' | 'farAnkle' | 'toe' | 'farToe' | 'hand' | 'farHand' | 'elbow'
 
 export type Prop =
-  | { kind: 'kettlebell'; hand: Hand; swing?: boolean }
+  | { kind: 'kettlebell'; hand: Hand; swing?: boolean; upright?: boolean }
   | { kind: 'dumbbell'; hand: Hand }
   | { kind: 'medball'; hand: Hand }
   | { kind: 'wheel' }
@@ -68,6 +69,7 @@ export type Shape = {
   torso: Point[]
   arms: [Point[], Point[]]
   legs: [Point[], Point[]]
+  grip: number
   props: (Part & { front: boolean })[]
 }
 
@@ -175,6 +177,7 @@ function build(move: Move, pose: Pose, hip: Point): Shape {
     torso: front ? [hips[0], hips[1], shoulders[1], shoulders[0]] : [hip, add(add(hip, up, len.torso / 2), across, pose.spine ?? 0), top],
     arms: [armPoints(shoulders[0], arm, len), armPoints(shoulders[1], farArm, len)],
     legs: [legPoints(hips[0], leg, foot, len), legPoints(hips[1], farLeg, foot, len)],
+    grip: pose.grip ?? 0,
     props: [],
   }
 }
@@ -196,7 +199,8 @@ const fixture = (points: Point[], width: number, fill = false): Part & { front: 
 
 function equipment(prop: Prop, s: Shape): (Part & { front: boolean })[] {
   const { arms, legs } = s
-  const hand = (which: Hand): Point => (which === 'far' ? arms[1][2] : which === 'near' ? arms[0][2] : lerpPoint(arms[0][2], arms[1][2], 0.5))
+  const hand = (which: Hand): Point =>
+    which === 'far' ? arms[1][2] : which === 'near' ? arms[0][2] : lerpPoint(arms[0][2], arms[1][2], which === 'pass' ? s.grip : 0.5)
   const anchor = (a: Anchor): Point => {
     if (Array.isArray(a)) return a
     const at = { hand: arms[0][2], farHand: arms[1][2], foot: legs[0][3], farFoot: legs[1][3], knee: legs[0][1], farKnee: legs[1][1] }
@@ -207,8 +211,8 @@ function equipment(prop: Prop, s: Shape): (Part & { front: boolean })[] {
     case 'kettlebell':
       return held(prop.hand).flatMap((which): (Part & { front: boolean })[] => {
         const at = hand(which)
-        const arm = arms[which === 'far' ? 1 : 0]
-        const bell = add(at, prop.swing ? dir(angleOf(arm[1], arm[2])) : dir(180), 0.12)
+        const arm = arms[which === 'far' || (which === 'pass' && s.grip > 0.5) ? 1 : 0]
+        const bell = add(at, prop.swing ? dir(angleOf(arm[1], arm[2])) : dir(prop.upright ? 0 : 180), 0.12)
         return [
           { tone: 'prop', width: 0.03, points: [at, bell], front: true },
           { tone: 'prop', width: 0, at: bell, r: 0.075, front: true },
@@ -326,6 +330,7 @@ export function blend(move: Move, a: Pose, b: Pose, k: number): Pose {
     head: turn(a.head ?? a.torso, b.head ?? b.torso, k),
     spine: lerp(a.spine ?? 0, b.spine ?? 0, k),
     lift: lerp(a.lift ?? 0, b.lift ?? 0, k),
+    grip: lerp(a.grip ?? 0, b.grip ?? 0, k),
     shorten: blendScale(a.shorten, b.shorten, k),
     arm: blendLimb(la.arm, lb.arm, k, [sa.arms[0][0], len[0]], [sb.arms[0][0], len[1]], false),
     farArm: blendLimb(la.farArm, lb.farArm, k, [sa.arms[1][0], len[0]], [sb.arms[1][0], len[1]], false),

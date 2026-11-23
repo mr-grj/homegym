@@ -11,6 +11,16 @@ const squatDown = (arm: Arm): Pose => ({ hip: [-0.3, 0.47], torso: 38, arm, leg:
 
 const plankBody = { torso: 74, leg: [254, 254, 164] as Leg }
 
+const halo = (near: Point, far: Point): Pose => ({ ...STAND, arm: hand(...near, -1), farArm: hand(...far, 1), leg: [180, 180, 110], grip: 0.5 })
+
+const rowStance = { hip: [-0.05, 0.86] as Point, torso: 62, farArm: hand(0.22, 0.58), leg: at(-0.44), farLeg: at(0.3) }
+
+const DOWN: Arm = [182, 178]
+const CURLED: Arm = [182, 25]
+const passCurl = (arm: Arm, farArm: Arm, grip: number, t: number, hold = 0): Pose => ({ ...STAND, arm, farArm, grip, t, hold })
+
+const kneel: Leg = { at: [-0.39, 0.06], bend: 1, foot: 268 }
+
 export const MOVES = {
   squat: {
     name: 'Bodyweight squat',
@@ -1316,6 +1326,150 @@ export const MOVES = {
       { hip: [0.05, 0.4], torso: -60, head: -45, arm: hand(-0.45, 0.04, 1), leg: at(0.42, 0.07), farLeg: at(0.6, 0.07) },
     ],
   },
+  shoulderCircles: {
+    name: 'Shoulder circles',
+    ease: 'linear',
+    cycle: true,
+    hold: 0,
+    beat: 650,
+    key: 1,
+    poses: [
+      { ...STAND, arm: [180, 352] },
+      { ...STAND, arm: [90, 262] },
+      { ...STAND, arm: [0, 172] },
+      { ...STAND, arm: [-90, 82] },
+      { ...STAND, arm: [-180, -8] },
+    ],
+  },
+  scapularPushUp: {
+    name: 'Scapular push-up',
+    anchor: { joint: 'toe', at: [-0.95, 0.02] },
+    beat: 650,
+    hold: 400,
+    poses: [
+      { torso: 72.2, spine: 0.05, head: 80, arm: hand(0.35), leg: [252.2, 252.2, 162.2], shorten: { upper: 1.06 } },
+      { torso: 76.8, spine: -0.03, head: 74, arm: hand(0.35), leg: [256.8, 256.8, 166.8], shorten: { upper: 0.7 } },
+    ],
+  },
+  kettlebellHalo: {
+    name: 'Kettlebell halo',
+    view: 'front',
+    props: [{ kind: 'kettlebell', hand: 'pass', upright: true }],
+    ease: 'linear',
+    hold: 0,
+    beat: 600,
+    key: 2,
+    poses: [
+      halo([0.05, 1.3], [-0.05, 1.3]),
+      halo([0.25, 1.57], [0.25, 1.67]),
+      halo([0.05, 1.77], [-0.05, 1.77]),
+      halo([-0.25, 1.67], [-0.25, 1.57]),
+      halo([0.05, 1.3], [-0.05, 1.3]),
+      halo([-0.25, 1.67], [-0.25, 1.57]),
+      halo([0.05, 1.77], [-0.05, 1.77]),
+      halo([0.25, 1.57], [0.25, 1.67]),
+    ],
+  },
+  kettlebellRow: {
+    name: 'Single-arm kettlebell row',
+    side: 'left',
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    poses: [
+      { ...rowStance, arm: [180, 180], t: 800 },
+      { ...rowStance, arm: [250, 175], hold: 350 },
+    ],
+  },
+  singleArmKettlebellPress: {
+    name: 'Single-arm kettlebell press',
+    view: 'front',
+    side: 'left',
+    anchor: { joint: 'hip', at: [0, 1] },
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    poses: [
+      { torso: 0, arm: [168, -12], farArm: [192, 186], leg: [180, 180, 120], t: 900 },
+      { torso: 0, arm: [8, 4], farArm: [192, 186], leg: [180, 180, 120], hold: 300 },
+    ],
+  },
+  kneelingKettlebellCurl: {
+    name: 'Kneeling kettlebell biceps curl',
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    poses: [
+      { hip: [0, 0.5], torso: 0, arm: [182, 178], leg: [180, 270, 265], t: 900 },
+      { hip: [0, 0.5], torso: 0, arm: [182, 25], leg: [180, 270, 265], hold: 250 },
+    ],
+  },
+  handToHandCurl: {
+    name: 'Hand-to-hand kettlebell curl',
+    side: 'left',
+    props: [{ kind: 'kettlebell', hand: 'pass' }],
+    poses: [
+      passCurl(DOWN, DOWN, 0, 800, 200),
+      passCurl(CURLED, DOWN, 0, 300, 100),
+      passCurl(CURLED, CURLED, 0, 200, 80),
+      passCurl(CURLED, CURLED, 1, 300),
+      passCurl(DOWN, CURLED, 1, 800, 80),
+      passCurl(DOWN, DOWN, 1, 800, 200),
+      passCurl(DOWN, CURLED, 1, 300, 100),
+      passCurl(CURLED, CURLED, 1, 200, 80),
+      passCurl(CURLED, CURLED, 0, 300),
+      passCurl(CURLED, DOWN, 0, 800, 80),
+    ],
+  },
+  kettlebellPullover: {
+    name: 'Kettlebell floor pullover',
+    anchor: { joint: 'shoulder', at: [-0.45, 0.1] },
+    props: [{ kind: 'kettlebell', hand: 'near', swing: true }],
+    poses: [
+      { torso: -90, head: -90, arm: [0, 0], leg: at(0.42), t: 1300 },
+      { torso: -90, head: -90, arm: [-80, -70], leg: at(0.42), hold: 300, t: 1000 },
+    ],
+  },
+  bandLateralRaise: {
+    name: 'Band lateral raise',
+    view: 'front',
+    props: [
+      { kind: 'band', from: 'foot', to: 'hand' },
+      { kind: 'band', from: 'farFoot', to: 'farHand' },
+    ],
+    poses: [
+      { ...STAND, arm: [172, 175], leg: [180, 180, 110], t: 900 },
+      { ...STAND, arm: [88, 92], leg: [180, 180, 110], hold: 250 },
+    ],
+  },
+  doorwayChestStretch: {
+    name: 'Doorway chest stretch',
+    side: 'left',
+    props: [{ kind: 'wall', x: -0.075 }],
+    beat: 1400,
+    poses: [
+      { hip: [0, 0.93], torso: 0, arm: { at: [-0.035, 1.7], bend: 1 }, leg: at(0.24), farLeg: at(-0.2), shorten: { upper: 0.12 }, hold: 500 },
+      { hip: [0.1, 0.91], torso: 9, arm: { at: [-0.035, 1.7], bend: 1 }, leg: at(0.24), farLeg: at(-0.2), shorten: { upper: 0.72 }, hold: 1600 },
+    ],
+  },
+  childsPoseLatStretch: {
+    name: "Child's pose lat stretch",
+    beat: 1500,
+    poses: [
+      { hip: [-0.22, 0.4], torso: 100, head: 115, arm: hand(0.66), leg: kneel, hold: 400 },
+      { hip: [-0.36, 0.24], torso: 104, head: 120, spine: -0.05, arm: hand(0.66), leg: kneel, hold: 1500 },
+    ],
+  },
+  bandBentOverRow: {
+    name: 'Bent-over band row',
+    props: [{ kind: 'band', from: [0.13, 0.03], to: 'hand' }],
+    poses: [
+      { hip: [-0.2, 0.84], torso: 48, arm: [180, 180], leg: FEET, t: 800 },
+      { hip: [-0.2, 0.84], torso: 48, arm: [250, 175], leg: FEET, hold: 400 },
+    ],
+  },
+  bandTricepsExtension: {
+    name: 'Band overhead triceps extension',
+    props: [{ kind: 'band', from: [-0.18, 0.03], to: 'hand' }],
+    poses: [
+      { hip: [0, 0.9], torso: 0, arm: [-8, 200], leg: at(0.2), farLeg: at(-0.25), t: 900 },
+      { hip: [0, 0.9], torso: 0, arm: [-8, -4], leg: at(0.2), farLeg: at(-0.25), hold: 250 },
+    ],
+  },
 } satisfies Record<string, Move>
 
 export type MoveId = keyof typeof MOVES
@@ -1345,7 +1499,7 @@ export const ALIASES: Partial<Record<MoveId, string[]>> = {
   standingBandRow: ['band row', 'resistance band row', 'ramat cu bandă', 'ramat cu bandă elastică', 'ramat cu elastic'],
   seatedBandRow: ['seated resistance band row'],
   bandShoulderPress: ['band overhead press', 'shoulder press cu bandă'],
-  bandPullApart: ['pull-apart'],
+  bandPullApart: ['pull-apart', 'resistance band pull-apart', 'light band pull-apart'],
   armCircles: ['shoulder and arm circles', 'rotiri de brațe', 'rotiri de umeri și brațe'],
   catCow: ['cat-camel', 'pisică-vacă'],
   wallSlide: ['wall angel'],
@@ -1473,4 +1627,17 @@ export const ALIASES: Partial<Record<MoveId, string[]>> = {
   chairPose: ['chair pose', 'utkatasana'],
   happyBaby: ['happy baby pose'],
   crabWalk: ['crab walks'],
+  shoulderCircles: ['shoulder circles and rolls', 'elbow circles', 'rotiri de umeri'],
+  scapularPushUp: ['scap push-up', 'scapula push-up', 'plank scapular push-up'],
+  kettlebellHalo: ['halo', 'KB halo', 'halo cu kettlebell'],
+  kettlebellRow: ['one-arm kettlebell row', 'single-arm KB row'],
+  singleArmKettlebellPress: ['one-arm kettlebell press', 'single-arm kettlebell overhead press', 'single-arm KB press'],
+  kneelingKettlebellCurl: ['kneeling kettlebell curl', 'tall-kneeling kettlebell curl'],
+  handToHandCurl: ['kettlebell hand-to-hand curl'],
+  kettlebellPullover: ['kettlebell pullover', 'floor pullover'],
+  bandLateralRaise: ['resistance band lateral raise', 'ridicări laterale cu bandă'],
+  doorwayChestStretch: ['doorway pec stretch', 'doorway pectoral stretch', 'doorway stretch'],
+  bandBentOverRow: ['band bent-over row', 'bent-over resistance band row', 'ramat aplecat cu bandă'],
+  bandTricepsExtension: ['resistance band overhead triceps extension', 'overhead band triceps extension', 'band triceps extension', 'extensii triceps cu bandă'],
+  childsPoseLatStretch: ["child's pose side stretch", 'lateral child pose', "child's pose side reach"],
 }

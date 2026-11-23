@@ -65,6 +65,26 @@ describe('matching names', () => {
     ['Tracțiuni', 'pullUp'],
     ['Fandări laterale', 'lateralLunge'],
     ["Runner's lunge", 'runnersLunge'],
+    ['Shoulder circles and rolls', 'shoulderCircles'],
+    ['Scapular push-ups', 'scapularPushUp'],
+    ['Light band pull-aparts', 'bandPullApart'],
+    ['Resistance band pull-aparts', 'bandPullApart'],
+    ['Kettlebell halos', 'kettlebellHalo'],
+    ['Single-arm kettlebell row', 'kettlebellRow'],
+    ['Single-arm kettlebell press', 'singleArmKettlebellPress'],
+    ['Kettlebell press', 'kettlebellPress'],
+    ['Kneeling kettlebell biceps curls', 'kneelingKettlebellCurl'],
+    ['Kettlebell floor pullovers', 'kettlebellPullover'],
+    ['Dumbbell pullover', 'pullover'],
+    ['Hand-to-hand kettlebell curls', 'handToHandCurl'],
+    ['Resistance band lateral raises', 'bandLateralRaise'],
+    ['Lateral raises', 'lateralRaise'],
+    ['Doorway chest stretch', 'doorwayChestStretch'],
+    ["Child's pose lat stretch", 'childsPoseLatStretch'],
+    ['Band overhead triceps extensions', 'bandTricepsExtension'],
+    ['Overhead triceps extensions', 'tricepsExtension'],
+    ['Bent-over band rows', 'bandBentOverRow'],
+    ['Resistance band rows', 'standingBandRow'],
   ])('%s shows %s', (label, id) => {
     expect(moveFor(label)?.id).toBe(id)
   })
@@ -103,6 +123,9 @@ describe('matching names', () => {
     'Toe touches',
     'Chest press',
     'Neck stretch',
+    'Kettlebell row',
+    'Kettlebell curl',
+    'Lat stretch',
     '',
   ])('%s shows nothing', (label) => {
     expect(moveFor(label)).toBeNull()
@@ -116,6 +139,10 @@ describe('matching names', () => {
     expect(moveFor('Reverse lunge (left)')).toMatchObject({ id: 'reverseLunge', mirror: true })
     expect(moveFor('Reverse lunge, right')).toMatchObject({ id: 'reverseLunge', mirror: false })
     expect(moveFor('Planșă laterală stânga')).toMatchObject({ id: 'sidePlank', mirror: false })
+    expect(moveFor('Single-arm kettlebell row - Left')).toMatchObject({ id: 'kettlebellRow', mirror: false })
+    expect(moveFor('Single-arm kettlebell row - Right')).toMatchObject({ id: 'kettlebellRow', mirror: true })
+    expect(moveFor('Single-arm kettlebell press - Left')).toMatchObject({ id: 'singleArmKettlebellPress', mirror: false })
+    expect(moveFor('Single-arm kettlebell press - Right')).toMatchObject({ id: 'singleArmKettlebellPress', mirror: true })
     expect(moveFor('Left')).toBeNull()
   })
 
@@ -233,13 +260,18 @@ describe('every demo looks like its own exercise', () => {
   })
   const gap = (a: Point[], b: Point[]) => a.reduce((sum, p, i) => sum + distance(p, b[i]), 0) / a.length
   const near = (a: Point[][], b: Point[][]) => a.reduce((sum, f) => sum + Math.min(...b.map((g) => gap(f, g))), 0) / a.length
+  const travel = (frames: Point[][]) => Math.max(...frames[0].map((_, i) => Math.max(...frames.map((f) => distance(f[i], frames[0][i])))))
+  const stillAndMoving = (a: Point[][], b: Point[][]) => {
+    const [still, moving] = [travel(a), travel(b)].sort((x, y) => x - y)
+    return still < 0.005 && moving >= 0.1
+  }
 
-  test('no two demos with the same equipment move alike', () => {
+  test('no two demos with the same equipment move alike, unless one holds still and the other clearly moves', () => {
     const alike: string[] = []
     for (const [i, a] of traces.entries())
       for (const b of traces.slice(i + 1)) {
         if (a.frames[0].length !== b.frames[0].length) continue
-        if (Math.max(near(a.frames, b.frames), near(b.frames, a.frames)) < 0.05) alike.push(`${a.id} ~ ${b.id}`)
+        if (Math.max(near(a.frames, b.frames), near(b.frames, a.frames)) < 0.05 && !stillAndMoving(a.frames, b.frames)) alike.push(`${a.id} ~ ${b.id}`)
       }
     expect(alike).toEqual([])
   })
@@ -255,6 +287,29 @@ describe('planted hands and feet', () => {
   test('a squat keeps the feet flat on the floor', () => {
     const move = MOVES.squat as Move
     for (const pose of frames(move)) expect(distance(shape(move, pose).legs[0][2], [0, 0.07])).toBeLessThan(1e-3)
+  })
+
+  test('a kettlebell passed from hand to hand is always held by one of them', () => {
+    const move = MOVES.handToHandCurl as Move
+    const holders = new Set<string>()
+    for (const pose of frames(move)) {
+      const s = shape(move, pose)
+      const handle = (s.props[0] as { points: Point[] }).points[0]
+      const near = distance(handle, joint(s, 'hand'))
+      const far = distance(handle, joint(s, 'farHand'))
+      expect(Math.min(near, far)).toBeLessThan(1e-3)
+      if (Math.abs(near - far) > 0.05) holders.add(near < far ? 'near' : 'far')
+    }
+    expect(holders).toEqual(new Set(['near', 'far']))
+  })
+
+  test('a halo holds the bell upside down, above the hands', () => {
+    const move = MOVES.kettlebellHalo as Move
+    for (const pose of frames(move)) {
+      const s = shape(move, pose)
+      const [handle, bell] = (s.props[0] as { points: Point[] }).points
+      expect(bell[1] - handle[1]).toBeCloseTo(0.12, 6)
+    }
   })
 
   test('a push-up keeps the hands on the floor', () => {
