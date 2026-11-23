@@ -1,5 +1,5 @@
 import type { Api, RoutineRecord, Session, SessionInput } from './api'
-import { parseRoutine } from './routine'
+import { blockExercises, parseRoutine } from './routine'
 
 type Data = { next: number; routines: RoutineRecord[]; sessions: Session[]; settings: Record<string, unknown> }
 
@@ -35,7 +35,7 @@ function seed(): Data {
       seconds,
       effort,
       notes,
-      blocks: routine?.blocks.map((block) => ({ name: block.name, done: true })) ?? [],
+      blocks: routine?.blocks.map((block, b) => ({ name: block.name, done: true, exercises: blockExercises(routine.steps, b) })) ?? [],
     }
   }
   const sessions = [

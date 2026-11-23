@@ -58,6 +58,7 @@ class Routine(RoutineIn):
 class Block(BaseModel):
     name: str
     done: bool
+    exercises: list[str] = []
 
 
 class SessionIn(BaseModel):

@@ -347,7 +347,7 @@ export default function App() {
         </Modal>
       )}
       {panel === 'history' && (
-        <Modal onClose={() => setPanel(null)}>
+        <Modal onClose={() => setPanel(null)} wide>
           <History sessions={sessions} onDelete={deleteSession} />
         </Modal>
       )}

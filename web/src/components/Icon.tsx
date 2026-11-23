@@ -36,6 +36,10 @@ const icons = {
   list: <path d="M4 6h11M4 12h11M4 18h7M17 18V9l4 1.5M17 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />,
   link: <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />,
   minimize: <path d="M6 9l6 6 6-6" />,
+  left: <path d="M15 6l-6 6 6 6" />,
+  right: <path d="M9 6l6 6-6 6" />,
+  search: <path d="M10.5 17.5a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20.5 20.5l-5-5" />,
+  calendar: <path d="M5 5.5h14a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1zM4 10h16M8.5 3.5v4M15.5 3.5v4" />,
   minus: <path d="M5 12h14" />,
   copy: <path d="M9 9h10v10H9zM15 9V5H5v10h4" />,
   figure: (

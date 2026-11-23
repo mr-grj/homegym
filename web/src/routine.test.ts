@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import seed from '../../api/app/seed.txt?raw'
 import {
+  blockExercises,
   durationText,
   fold,
   parseDoc,
@@ -134,6 +135,13 @@ describe('parseRoutine', () => {
     const routine = parseRoutine('## Stretch\nQuads\n~ Rest 10s')
     expect(routine.blocks[0].seconds).toBeNull()
     expect(totalSeconds(routine.steps)).toBeNull()
+  })
+
+  test('lists each block\'s exercises once, without rests', () => {
+    const routine = parseRoutine('## Warm-up\nJacks 30s\n## Circuit ×2\nPlank 45s\n~ Rest 15s\nSide plank, left 30s\nPlank 20s')
+    expect(blockExercises(routine.steps, 0)).toEqual(['Jacks'])
+    expect(blockExercises(routine.steps, 1)).toEqual(['Plank', 'Side plank, left'])
+    expect(blockExercises(routine.steps, 2)).toEqual([])
   })
 
   test('detects Romanian', () => {

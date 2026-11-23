@@ -88,12 +88,25 @@ def test_session_lifecycle(client: TestClient) -> None:
     created = client.post("/api/sessions", json=session_body())
     assert created.status_code == 201
     session = created.json()
-    assert session["blocks"] == [{"name": "Activation", "done": True}, {"name": "Circuit", "done": False}]
+    assert session["blocks"] == [
+        {"name": "Activation", "done": True, "exercises": []},
+        {"name": "Circuit", "done": False, "exercises": []},
+    ]
     assert session["effort"] == 6
 
     assert client.get("/api/sessions").json() == [session]
     assert client.delete(f"/api/sessions/{session['id']}").status_code == 204
     assert client.get("/api/sessions").json() == []
+
+
+def test_session_blocks_keep_their_exercises(client: TestClient, db_path: Path) -> None:
+    block = {"name": "Circuit", "done": True, "exercises": ["Plank", "Side plank, left"]}
+    saved = client.post("/api/sessions", json=session_body(blocks=[block])).json()
+    assert saved["blocks"] == [block]
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE sessions SET blocks = ?", ('[{"name": "Circuit", "done": true}]',))
+    assert client.get("/api/sessions").json()[0]["blocks"] == [{"name": "Circuit", "done": True, "exercises": []}]
 
 
 def test_sessions_are_newest_first_and_limited(client: TestClient) -> None:

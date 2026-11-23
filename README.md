@@ -26,7 +26,8 @@
 - **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and a voice that reads out the next exercise, using the most natural voice your device has or one you pick. The screen stays awake.
 - **See how it's done.** When an exercise starts, a small figure shows it on a loop. During a rest it previews what comes next, marked "Up next", and it pauses with the timer. About 150 exercises are covered, in English and Romanian.
 - **Music that follows the timer.** Paste a YouTube Music or SoundCloud link: it plays when you start, pauses when you pause, gets quieter for the countdown and fades out at the end. Each playlist resumes where you left off.
-- **A log you'll actually keep.** At the end of a workout, tick the blocks you finished, rate the effort and add a note. History shows daily totals.
+- **Time boxes, not rep counts.** Made for home workouts with whatever you have, like one kettlebell. Each exercise gets the time you choose and you fit in as many good reps as you can. To progress, lengthen the steps or add rounds.
+- **A log you'll actually keep.** At the end of a workout, tick the blocks you finished, rate the effort and add a note. History shows the exercises you did and daily totals. Search it by exercise, note or date (`squat`, `nov 20`, `yesterday`), or pick a day on the calendar.
 - **Keyboard first, phone friendly.** Every action has a shortcut and a tooltip, and the layout adapts to small screens.
 - **Self-hosted.** One `docker compose up`. Routines, history and settings live in SQLite and sync across your devices.
 

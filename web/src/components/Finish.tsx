@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useState, type CSSProperties } from 'react'
 import type { SessionBlock } from '../api'
 import { clock } from '../format'
+import { blockExercises } from '../routine'
 import type { Run } from '../timer'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
@@ -18,6 +19,7 @@ export function Finish({ run, onSave, onDiscard }: Props) {
     run.routine.blocks.map((block, b) => ({
       name: block.name,
       done: !!run.finishedAt || run.steps.findLastIndex((s) => s.block === b) < run.index,
+      exercises: blockExercises(run.steps, b),
     })),
   )
   const [effort, setEffort] = useState(7)

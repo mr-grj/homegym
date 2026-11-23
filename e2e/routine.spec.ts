@@ -67,7 +67,10 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
   const today = app.locator('.history .day').first()
   await expect(today.locator('h3')).toContainText('Today')
   await expect(today.locator('li')).toHaveCount(1)
-  await expect(today.locator('li small')).toHaveText('effort 8/10 · 1/2 blocks · Felt good')
+  await expect(today.locator('.log-did')).toHaveText('Dead bug · Glute bridge')
+  await expect(today.locator('.log-meta')).toHaveText('effort 8/10 · 1/2 blocks', { useInnerText: true })
+  await expect(today.locator('.log-note')).toHaveText('Felt good')
+  await expect(today.locator('button.log-body')).toHaveCount(0)
   await shortcut(app, 'Escape')
 
   await app.keyboard.press('ControlOrMeta+z')

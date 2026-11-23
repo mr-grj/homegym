@@ -147,6 +147,11 @@ export function parseRoutine(source: string, id: number | null = null): Routine 
   }
 }
 
+/** The exercises in one block, in order and without repeats, leaving out rests. */
+export const blockExercises = (steps: Pick<Step, 'label' | 'rest' | 'block'>[], block: number) => [
+  ...new Set(steps.filter((step) => step.block === block && !step.rest).map((step) => step.label)),
+]
+
 /** Write seconds the way people type them: 45s, 2m, 1h or 1:30. */
 export function durationText(seconds: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')

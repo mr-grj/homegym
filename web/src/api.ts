@@ -1,7 +1,7 @@
 import { demoApi } from './demo'
 
 export type RoutineRecord = { id: number; source: string; updated_at: string }
-export type SessionBlock = { name: string; done: boolean }
+export type SessionBlock = { name: string; done: boolean; exercises?: string[] }
 export type SessionInput = {
   title: string
   started_at: string
