@@ -11,6 +11,10 @@ const entries = Object.entries(HINTS) as [keyof typeof HINTS, Hint][]
 const cues = entries.flatMap(([id, hint]) => [hint.setup, hint.form].filter((cue) => cue !== undefined).map((cue) => ({ id, cue })))
 
 describe('technique hints', () => {
+  test('every demo has a hint', () => {
+    expect(Object.keys(MOVES).filter((id) => !(id in HINTS))).toEqual([])
+  })
+
   test('every hint belongs to a demo and names at least one https source', () => {
     expect(Object.keys(SOURCES).sort()).toEqual(Object.keys(HINTS).sort())
     for (const [id, hint] of entries) {
@@ -77,11 +81,11 @@ describe('which hint shows when', () => {
     expect(hintNow(run, at(36))).toBe(HINTS.crunch.setup)
   })
 
-  test('a note on the exercise takes the place of its hint', () => {
+  test('a note on the exercise shows alongside its hint', () => {
     const run = jump(play(arm(routine, PREP), at(0)), 2, at(1))
     expect(run.steps[run.index].note).toBe('slow')
-    expect(hintNow(run, at(2))).toBeNull()
-    expect(hintNow(run, at(10))).toBeNull()
+    expect(hintNow(run, at(2))).toBe(HINTS.crunch.setup)
+    expect(hintNow(run, at(10))).toBe(HINTS.crunch.form)
   })
 
   test('unknown exercises and finished runs show nothing', () => {
