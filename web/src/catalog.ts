@@ -108,7 +108,7 @@ export const MOVES = {
   plank: {
     name: 'Plank',
     anchor: { joint: 'toe', at: [-0.95, 0.02] },
-    poses: [{ torso: 79, leg: [259, 259, 169], arm: [180, 90] }],
+    poses: [{ torso: 84.6, leg: [264.6, 264.6, 174.6], arm: [180, 90] }],
   },
   highPlank: {
     name: 'High plank',
@@ -121,7 +121,7 @@ export const MOVES = {
     side: 'left',
     narrow: true,
     anchor: { joint: 'toe', at: [-0.9, 0.03] },
-    poses: [{ torso: 70, arm: [180, 90], farArm: [10, 10], leg: [250, 250, 160], farLeg: [250, 250, 160] }],
+    poses: [{ torso: 74.7, arm: [180, 90], farArm: [10, 10], leg: [254.7, 254.7, 164.7], farLeg: [254.7, 254.7, 164.7] }],
   },
   hollowHold: {
     name: 'Hollow hold',

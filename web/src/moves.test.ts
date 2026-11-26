@@ -325,4 +325,12 @@ describe('planted hands and feet', () => {
     const move = MOVES.pushUp as Move
     for (const pose of frames(move)) expect(distance(shape(move, pose).arms[0][2], [0.35, 0.05])).toBeLessThan(1e-3)
   })
+
+  test('a forearm plank rests elbows and hands on the floor', () => {
+    for (const move of [MOVES.plank, MOVES.sidePlank] as Move[]) {
+      const [, elbow, hand] = shape(move, keyPose(move)).arms[0]
+      expect(elbow[1]).toBeCloseTo(0.05, 2)
+      expect(hand[1]).toBeCloseTo(0.05, 2)
+    }
+  })
 })
