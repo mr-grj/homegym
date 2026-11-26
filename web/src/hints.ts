@@ -176,6 +176,12 @@ export const HINTS = {
   hipSwitch: { setup: 'Sit tall, both sitting bones down', form: 'Switch slowly, no bouncing at the end' },
   hipCircles: { setup: 'Hands on hips, feet shoulder-width', form: 'Slow, controlled circles, torso steady' },
   kettlebellHighPull: { setup: 'Feet wide, bell between your feet', form: 'Drive with hips, elbow high, bell close' },
+  kettlebellSwingHighPull: { setup: 'Hike the bell back as in a swing', form: 'Snap hips, pull elbow back, bell close' },
+  kettlebellGobletThruster: { setup: 'Hold the bell by the horns at your chest', form: 'Drive up from the squat, press overhead' },
+  kettlebellReverseLunge: { setup: 'Bell at your chest, stand tall', form: 'Step back, drive up through the front foot' },
+  kettlebellSuitcaseMarch: { setup: 'Bell at your side, shoulders level', form: 'Lift knees slowly, no leaning sideways' },
+  kettlebellAroundTheWorld: { setup: 'Stand tall, bell in one hand at your hip', form: 'Hand to hand around the waist, no twisting' },
+  kettlebellSquatFrontRaise: { setup: 'Hold the bell at your chest, feet flat', form: 'Raise to shoulder height, no leaning back' },
 } satisfies Partial<Record<MoveId, Hint>>
 
 const ACE = 'https://www.acefitness.org/resources/everyone/exercise-library/'
@@ -354,6 +360,12 @@ export const SOURCES: Record<keyof typeof HINTS, string[]> = {
   hipSwitch: ['https://livestrong.com/article/13771782-cant-do-90-90-hip-switch', 'https://health.clevelandclinic.org/90-90-stretch/'],
   hipCircles: ['https://fitbod.me/exercises/standing-hip-circle', 'https://umaine.edu/outdoorleadership/hip-circles/'],
   kettlebellHighPull: ['https://kettlebellsworkouts.com/teaching-points-for-the-kettlebell-high-pull/', 'https://motra.com/exercises/kettlebellHighPull'],
+  kettlebellSwingHighPull: ['https://www.strongfirst.com/taming-the-arc-in-kettlebell-lifts/', 'https://www.kettlebellkings.com/blog/single-arm-swing-progression-for-grappling-mma/', `${ACE}391/swing/`],
+  kettlebellGobletThruster: ['https://www.masterclass.com/articles/kettlebell-thruster-guide', 'https://www.garagegymreviews.com/kettlebell-thruster', `${ACE}362/goblet-squat/`],
+  kettlebellReverseLunge: ['https://motra.com/exercises/kettlebellGobletReverseLunge', 'https://kettlebellsworkouts.com/teaching-points-of-the-kettlebell-lunge/', 'https://www.muscleandstrength.com/exercises/kettlebell-reverse-lunge'],
+  kettlebellSuitcaseMarch: [`${ACE}389/suitcase-carry/`, 'https://motra.com/exercises/kettlebellSingleArmMarch', 'https://mikereinold.com/kettlebell-march-drill-functional-core-stability/'],
+  kettlebellAroundTheWorld: ['https://www.garagegymreviews.com/kettlebell-around-the-world', 'https://exercise.com/exercises/kettlebell-around-the-world', 'https://www.trainwell.net/exercises/single-kettlebell-around-the-world'],
+  kettlebellSquatFrontRaise: ['https://sweat.com/exercises/squat-to-front-raise', `${ACE}362/goblet-squat/`, `${ACE}54/front-raise/`],
 }
 
 const known: Partial<Record<MoveId, Hint>> = HINTS

@@ -151,6 +151,46 @@ describe('matching names', () => {
     expect(moveFor('Left')).toBeNull()
   })
 
+  test('kettlebell variants get their own demo, never a look-alike', () => {
+    const ids = (names: string[]) => names.map((name) => moveFor(name)?.id ?? null)
+    expect(
+      ids([
+        'Two-hand kettlebell swing',
+        'Resistance band bent-over row',
+        'Single-arm kettlebell high pull - Left',
+        'Kettlebell high pull',
+        'Kettlebell goblet thruster',
+        'Dumbbell thruster',
+        'Kettlebell reverse lunges',
+        'Reverse lunges',
+        'Kettlebell suitcase march',
+        'Kettlebell around the world',
+        'Kettlebell halos',
+        'Kettlebell squat to front raise',
+        'Kettlebell floor pullover',
+        "Child's pose lat stretch",
+        'Standing chest stretch',
+      ]),
+    ).toEqual([
+      'kettlebellSwing',
+      'bandBentOverRow',
+      'kettlebellSwingHighPull',
+      'kettlebellHighPull',
+      'kettlebellGobletThruster',
+      'thruster',
+      'kettlebellReverseLunge',
+      'reverseLunge',
+      'kettlebellSuitcaseMarch',
+      'kettlebellAroundTheWorld',
+      'kettlebellHalo',
+      'kettlebellSquatFrontRaise',
+      'kettlebellPullover',
+      'childsPoseLatStretch',
+      'chestOpener',
+    ])
+    expect(moveFor('Single-arm kettlebell high pull - Right')?.mirror).toBe(true)
+  })
+
   test('the examples show these demos', () => {
     const labels = new Map<string, string | null>()
     for (const source of Object.values(examples))
@@ -310,8 +350,8 @@ describe('planted hands and feet', () => {
     for (const pose of frames(move)) expect(distance(shape(move, pose).legs[0][2], [0, 0.07])).toBeLessThan(1e-3)
   })
 
-  test('a kettlebell passed from hand to hand is always held by one of them', () => {
-    const move = MOVES.handToHandCurl as Move
+  test.each(['handToHandCurl', 'kettlebellAroundTheWorld'] as const)('a kettlebell passed from hand to hand is always held by one of them: %s', (id) => {
+    const move = MOVES[id] as Move
     const holders = new Set<string>()
     for (const pose of frames(move)) {
       const s = shape(move, pose)
@@ -322,6 +362,47 @@ describe('planted hands and feet', () => {
       if (Math.abs(near - far) > 0.05) holders.add(near < far ? 'near' : 'far')
     }
     expect(holders).toEqual(new Set(['near', 'far']))
+  })
+
+  test('around the world passes the bell in front of the body and behind it, both ways round', () => {
+    const move = MOVES.kettlebellAroundTheWorld as Move
+    const bell = (t: number) => {
+      const s = shape(move, poseAt(move, t))
+      return (s.props[0] as { points: Point[] }).points[0][0] - joint(s, 'hip')[0]
+    }
+    const half = loopLength(move) / 2
+    for (const [from, to] of [[0, half], [half, 2 * half]]) {
+      const xs = Array.from({ length: 61 }, (_, i) => bell(from + ((to - from) * i) / 60))
+      expect(Math.max(...xs)).toBeGreaterThan(0.2)
+      expect(Math.min(...xs)).toBeLessThan(-0.2)
+    }
+  })
+
+  test('the swing high pull drives the elbow back at chest height, unlike an upright row', () => {
+    const move = MOVES.kettlebellSwingHighPull as Move
+    const s = shape(move, keyPose(move))
+    const shoulder = joint(s, 'shoulder')
+    expect(joint(s, 'elbow')[0]).toBeLessThan(shoulder[0] - 0.15)
+    expect(joint(s, 'elbow')[1]).toBeLessThan(shoulder[1])
+    expect(Math.abs(joint(s, 'hand')[1] - shoulder[1])).toBeLessThan(0.15)
+  })
+
+  test('the goblet thruster presses one bell overhead with both hands', () => {
+    const move = MOVES.kettlebellGobletThruster as Move
+    const s = shape(move, keyPose(move))
+    expect(distance(joint(s, 'hand'), joint(s, 'farHand'))).toBeLessThan(1e-3)
+    expect(joint(s, 'hand')[1]).toBeGreaterThan(joint(s, 'head')[1] + 0.2)
+    expect(s.props.filter((p) => 'at' in p)).toHaveLength(1)
+  })
+
+  test('the squat to front raise lifts the bell no higher than the shoulders', () => {
+    const move = MOVES.kettlebellSquatFrontRaise as Move
+    const tops = frames(move).map((pose) => {
+      const s = shape(move, pose)
+      return joint(s, 'hand')[1] - joint(s, 'shoulder')[1]
+    })
+    expect(Math.max(...tops)).toBeLessThan(0.05)
+    expect(Math.max(...tops)).toBeGreaterThan(-0.05)
   })
 
   test('a halo holds the bell upside down, above the hands', () => {

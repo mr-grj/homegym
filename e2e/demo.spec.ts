@@ -67,6 +67,35 @@ test('technique hints: setup before an exercise, form while it runs, next to a n
   await expect(hint).toHaveCount(0)
 })
 
+test('kettlebell variants show their own figure and cues while the timer keeps going', async ({ app }) => {
+  const hint = app.locator('.demo-hint')
+  await addRoutine(app, '# Bells\n\n## Go\nKettlebell around the world 20s\n~ Rest 10s\nSingle-arm kettlebell high pull - Right 20s\n> 10kg. Keep bell close.\n')
+  await app.locator('.chip-main', { hasText: 'Bells' }).click()
+  await expect(demo(app)).toHaveAttribute('data-move', 'kettlebellAroundTheWorld')
+  await expect(hint).toHaveText('Stand tall, bell in one hand at your hip')
+
+  await shortcut(app, 'Space')
+  await expect(app.locator('.prep-cue')).toBeVisible()
+  await expect(hint).toHaveText('Stand tall, bell in one hand at your hip')
+  await app.clock.runFor(5500)
+  await expect(hint).toHaveText('Hand to hand around the waist, no twisting')
+  await expect(app.locator('.time')).toHaveText('0:20')
+  await app.clock.runFor(3000)
+  await expect(app.locator('.time')).toHaveText('0:17')
+  await expect(hint).toHaveText('Hand to hand around the waist, no twisting')
+
+  await app.clock.runFor(17000)
+  await expect(app.locator('.label')).toHaveText('Rest')
+  await expect(demo(app)).toHaveAttribute('data-move', 'kettlebellSwingHighPull')
+  await expect(hint).toHaveText('Hike the bell back as in a swing')
+  await app.clock.runFor(10000)
+  await expect(app.locator('.label')).toHaveText('Single-arm kettlebell high pull - Right')
+  await expect(hint).toHaveText('Hike the bell back as in a swing')
+  await app.clock.runFor(5500)
+  await expect(hint).toHaveText('Snap hips, pull elbow back, bell close')
+  await expect(app.locator('.note')).toHaveText('10kg. Keep bell close.')
+})
+
 test('the hint line is kept for the whole run and fits a small phone', async ({ app }) => {
   await app.setViewportSize({ width: 320, height: 640 })
   await app.locator('.chip-main', { hasText: 'Full Body' }).click()

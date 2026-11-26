@@ -19,6 +19,13 @@ const DOWN: Arm = [182, 178]
 const CURLED: Arm = [182, 25]
 const passCurl = (arm: Arm, farArm: Arm, grip: number, t: number, hold = 0): Pose => ({ ...STAND, arm, farArm, grip, t, hold })
 
+const AHEAD: Point = [0.25, 1.0]
+const BEHIND: Point = [-0.22, 1.0]
+const BESIDE: Point = [0, 0.9]
+const around = (near: Point, far: Point, grip: number, t: number, hold = 0): Pose => ({ ...STAND, arm: hand(...near), farArm: hand(...far), grip, t, hold })
+const GOBLET: Arm = [170, 15]
+const gobletLow: Pose = { ...squatDown([168, 20]), hip: [-0.27, 0.44], torso: 30 }
+
 const kneel: Leg = { at: [-0.39, 0.06], bend: 1, foot: 268 }
 
 export const MOVES = {
@@ -1519,6 +1526,79 @@ export const MOVES = {
       { hip: [0.1, 0.94], torso: -9, arm: [160, 300], leg: at(0.2), farLeg: at(-0.2) },
     ],
   },
+  kettlebellSwingHighPull: {
+    name: 'Single-arm kettlebell high pull',
+    side: 'left',
+    key: 2,
+    props: [{ kind: 'kettlebell', hand: 'near', swing: true }],
+    poses: [
+      { hip: [-0.28, 0.85], torso: 62, arm: [196, 196], farArm: [200, 200], leg: FEET, hold: 60, t: 380 },
+      { ...STAND, arm: [140, 140], farArm: [182, 182], hold: 0, t: 260 },
+      { ...STAND, arm: [255, 92], farArm: [182, 182], hold: 180, t: 520 },
+    ],
+  },
+  kettlebellGobletThruster: {
+    name: 'Kettlebell goblet thruster',
+    key: 2,
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    poses: [
+      { ...gobletLow, hold: 150, t: 650 },
+      { ...STAND, arm: GOBLET, hold: 0, t: 450 },
+      { ...STAND, arm: [3, 3], hold: 250, t: 1100 },
+    ],
+  },
+  kettlebellReverseLunge: {
+    name: 'Kettlebell reverse lunge',
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    poses: [
+      { ...STAND, arm: GOBLET, t: 900 },
+      { hip: [-0.42, 0.53], torso: 4, arm: [172, 19], leg: at(-0.86, 0.16, 130), farLeg: FEET, hold: 250 },
+      { ...STAND, arm: GOBLET, t: 900 },
+      { hip: [-0.42, 0.53], torso: 4, arm: [172, 19], leg: FEET, farLeg: at(-0.86, 0.16, 130), hold: 250 },
+    ],
+  },
+  kettlebellSuitcaseMarch: {
+    name: 'Kettlebell suitcase march',
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    beat: 650,
+    hold: 300,
+    poses: [
+      { ...STAND, arm: [180, 180], farArm: [178, 178] },
+      { ...STAND, arm: [180, 180], farArm: [178, 178], leg: [90, 180, 110], farLeg: FEET },
+      { ...STAND, arm: [180, 180], farArm: [178, 178] },
+      { ...STAND, arm: [180, 180], farArm: [178, 178], leg: FEET, farLeg: [90, 180, 110] },
+    ],
+  },
+  kettlebellAroundTheWorld: {
+    name: 'Kettlebell around the world',
+    props: [{ kind: 'kettlebell', hand: 'pass' }],
+    poses: [
+      around(AHEAD, AHEAD, 1, 220, 80),
+      around(AHEAD, AHEAD, 0, 380),
+      around(BESIDE, [-0.15, 0.95], 0, 380),
+      around(BEHIND, BEHIND, 0, 220, 80),
+      around(BEHIND, BEHIND, 1, 380),
+      around([0.15, 0.95], BESIDE, 1, 380),
+      around(AHEAD, AHEAD, 1, 380, 250),
+      around([-0.15, 0.95], BESIDE, 1, 380),
+      around(BEHIND, BEHIND, 1, 220, 80),
+      around(BEHIND, BEHIND, 0, 380),
+      around(BESIDE, [0.15, 0.95], 0, 380),
+      around(AHEAD, AHEAD, 0, 220, 80),
+      around(AHEAD, AHEAD, 1, 380, 250),
+    ],
+  },
+  kettlebellSquatFrontRaise: {
+    name: 'Kettlebell squat to front raise',
+    key: 3,
+    props: [{ kind: 'kettlebell', hand: 'near' }],
+    poses: [
+      { ...STAND, arm: GOBLET, t: 1100 },
+      { ...gobletLow, t: 1000 },
+      { ...STAND, arm: GOBLET, hold: 120, t: 850 },
+      { ...STAND, arm: [92, 92], hold: 300, t: 850 },
+    ],
+  },
 } satisfies Record<string, Move>
 
 export type MoveId = keyof typeof MOVES
@@ -1562,7 +1642,7 @@ export const ALIASES: Partial<Record<MoveId, string[]>> = {
   skaterHops: ['skaters', 'skater jumps'],
   starJump: [],
   inchworm: ['inch worm'],
-  kettlebellSwing: ['KB swing', 'Russian kettlebell swing', 'Russian swing', 'swing cu kettlebell'],
+  kettlebellSwing: ['KB swing', 'Russian kettlebell swing', 'Russian swing', 'swing cu kettlebell', 'two-hand kettlebell swing', 'two-handed kettlebell swing'],
   kettlebellDeadlift: ['KB deadlift', 'kettlebell sumo deadlift'],
   dumbbellRow: ['bent-over row', 'dumbbell bent-over row', 'ramat cu gantere', 'ramat cu ganteră'],
   overheadPress: ['dumbbell shoulder press', 'overhead press', 'shoulder press', 'military press', 'împins deasupra capului'],
@@ -1686,7 +1766,13 @@ export const ALIASES: Partial<Record<MoveId, string[]>> = {
   kettlebellPullover: ['kettlebell pullover', 'floor pullover'],
   bandLateralRaise: ['resistance band lateral raise', 'ridicări laterale cu bandă'],
   doorwayChestStretch: ['doorway pec stretch', 'doorway pectoral stretch', 'doorway stretch'],
-  bandBentOverRow: ['band bent-over row', 'bent-over resistance band row', 'ramat aplecat cu bandă'],
+  bandBentOverRow: ['band bent-over row', 'bent-over resistance band row', 'resistance band bent-over row', 'ramat aplecat cu bandă'],
+  kettlebellSwingHighPull: ['one-arm kettlebell high pull', 'single-arm kettlebell swing high pull', 'kettlebell swing high pull'],
+  kettlebellGobletThruster: ['goblet thruster', 'kettlebell thruster'],
+  kettlebellReverseLunge: ['goblet reverse lunge', 'kettlebell goblet reverse lunge'],
+  kettlebellSuitcaseMarch: ['suitcase march', 'single-arm kettlebell march', 'kettlebell march'],
+  kettlebellAroundTheWorld: ['around the world', 'kettlebell around the body'],
+  kettlebellSquatFrontRaise: ['goblet squat to front raise', 'kettlebell squat and front raise'],
   bandTricepsExtension: ['resistance band overhead triceps extension', 'overhead band triceps extension', 'band triceps extension', 'extensii triceps cu bandă'],
   thoracicRotation: ['T-spine rotation', 'quadruped thoracic rotation', 'quadruped T-spine rotation', 'rotații toracice'],
   worldsGreatestStretch: ['WGS'],
