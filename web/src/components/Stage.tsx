@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore, type CSSProperties, type MouseEvent } from 'react'
 import { clock } from '../format'
 import { headroom } from '../figure'
+import { hasHints, hintNow } from '../hints'
 import { demoStep, moveFor } from '../moves'
 import { countdown, face, plannedSeconds, SIP_SECONDS, stepElapsed, totalElapsed, type Run } from '../timer'
 import { POUR_DELAY, useNow, type Sips } from '../workout'
@@ -90,8 +91,10 @@ export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSk
   const state = run.finishedAt ? 'done' : run.since !== null ? 'running' : run.startedAt ? 'paused' : 'armed'
   const urgent = countdown(run, now) !== null
   const slot = useMemo(() => demos && run.steps.some((s) => !s.rest && moveFor(s.label)), [demos, run.steps])
+  const hinted = useMemo(() => slot && hasHints(run.steps), [slot, run.steps])
   const shown = demoStep(run)
   const demo = slot && shown ? moveFor(shown.label) : null
+  const hint = demo && hinted ? hintNow(run, now) : null
   const into = stepElapsed(run, now)
   const tall = useRoomy()
   const drinking = !!sips && into >= sips.at && into - sips.at < SIP_SECONDS * 1000
@@ -134,7 +137,7 @@ export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSk
       <section className="face">
         <div className="clock">
           {slot && (
-            <div className="demo-slot" data-over={above || undefined}>
+            <div className="demo-slot" data-over={above || undefined} data-hinted={hinted || undefined}>
               {above && (
                 <div className="demo-over">
                   <span className="demo-cue">Up next</span>
@@ -153,9 +156,14 @@ export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSk
                 />
               )}
               {demo && f.step.rest && !above && (
-                <span className="demo-cue" data-head style={{ top: `${headroom(demo.move) * 100}%` }}>
+                <span className="demo-cue" data-head style={{ top: `calc((100% - var(--hint, 0px)) * ${headroom(demo.move)})` }}>
                   Up next
                 </span>
+              )}
+              {hint && (
+                <p key={hint} className="demo-hint">
+                  {hint}
+                </p>
               )}
             </div>
           )}

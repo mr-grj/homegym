@@ -39,6 +39,53 @@ test('the figure shows the exercise, previews the next one during a rest and fol
   await expect(body(app)).toHaveAttribute('points', paused!)
 })
 
+test('technique hints: setup before an exercise, form while it runs, never over a note', async ({ app }) => {
+  const hint = app.locator('.demo-hint')
+  await app.locator('.chip-main', { hasText: 'Full body' }).click()
+  await expect(hint).toHaveText('Feet a bit wider than hips, toes out')
+
+  await shortcut(app, 'Space')
+  await expect(app.locator('.prep-cue')).toBeVisible()
+  await expect(hint).toHaveText('Feet a bit wider than hips, toes out')
+  await app.clock.runFor(5500)
+  await expect(hint).toHaveText('Sit hips back, knees follow your toes')
+  await shortcut(app, 'Space')
+  await expect(hint).toHaveText('Sit hips back, knees follow your toes')
+  await shortcut(app, 'Space')
+
+  for (let i = 0; i < 4; i++) await shortcut(app, 'ArrowRight')
+  await expect(app.locator('.label')).toHaveText('Goblet squat')
+  await expect(app.locator('.note')).toBeVisible()
+  await expect(hint).toHaveCount(0)
+
+  await shortcut(app, 'ArrowRight')
+  await expect(app.locator('.label')).toHaveText('Switch')
+  await expect(hint).toHaveText('Stand tall, knees soft, chest lifted')
+  await shortcut(app, 'd')
+  await expect(hint).toHaveCount(0)
+})
+
+test('the hint line is kept for the whole run and fits a small phone', async ({ app }) => {
+  await app.setViewportSize({ width: 320, height: 640 })
+  await app.locator('.chip-main', { hasText: 'Full body' }).click()
+  await expect(app.locator('.demo-slot')).toHaveAttribute('data-hinted')
+  const clock = await app.locator('.time').boundingBox()
+  for (const [label, hinted] of [['Bodyweight squats', true], ['Hip hinges, flat back', true], ['Shoulder and arm circles', false], ['Alternating light lunges', true]] as const) {
+    await expect(app.locator('.label')).toHaveText(label)
+    await expect(demo(app)).toBeVisible()
+    await expect(app.locator('.demo-hint')).toHaveCount(hinted ? 1 : 0)
+    if (hinted) {
+      const box = (await app.locator('.demo-hint').boundingBox())!
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.width).toBeLessThanOrEqual(320)
+      expect(box.height).toBeLessThan(22)
+    }
+    expect(await app.locator('.time').boundingBox()).toEqual(clock)
+    await shortcut(app, 'ArrowRight')
+  }
+  expect(await app.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)
+})
+
 test('unknown exercises show nothing and the clock never moves', async ({ app }) => {
   await app.setViewportSize({ width: 390, height: 844 })
   await app.locator('.chip-main', { hasText: 'Morning mobility' }).click()
