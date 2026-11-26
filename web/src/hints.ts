@@ -109,7 +109,7 @@ export const HINTS = {
   tuckJump: { setup: 'Feet hip-width, core braced', form: 'Knees to chest, land with soft knees' },
   monsterWalk: { setup: 'Band around ankles, slight squat', form: 'Step sideways, keep your trunk still' },
   catCow: { setup: 'Hands under shoulders, knees under hips', form: 'Exhale to round, then let the belly drop' },
-  wallSlide: { form: 'Slide up without shrugging' },
+  wallSlide: { setup: 'Stand tall, shoulders down and relaxed', form: 'Slide up without shrugging' },
   chestOpener: { setup: 'Shoulders down and back', form: 'Lift the chest, squeeze shoulder blades' },
   doorwayChestStretch: { setup: 'Elbow on the frame at shoulder height', form: 'Lean in gently to a chest stretch' },
   crossBodyStretch: { setup: 'Stand tall, shoulders relaxed', form: 'Draw the arm across and hold' },
