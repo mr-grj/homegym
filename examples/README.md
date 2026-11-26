@@ -2,16 +2,16 @@
 
 Copy any file's contents into **+ Routine** in homegym, then save with `⌘⏎`.
 
-| File | What it shows | Length |
+| File | What it is | Length |
 | --- | --- | --- |
-| [`full-body-20.txt`](full-body-20.txt) | Strength supersets with switch and rest steps, notes for reps and weight | 20:00 |
-| [`antrenament-full-body.ro.txt`](antrenament-full-body.ro.txt) | The same workout in Romanian | 20:00 |
-| [`core-10.txt`](core-10.txt) | A warm-up block followed by a circuit repeated three times | 10:00 |
-| [`tabata.txt`](tabata.txt) | 20/10 intervals with recovery blocks in between | 12:00 |
-| [`mobility-morning.txt`](mobility-morning.txt) | Minute-long steps grouped by body area | 10:00 |
-| [`breathing-4-7-8.txt`](breathing-4-7-8.txt) | Very short steps repeated in cycles | 3:02 |
-| [`deep-work.txt`](deep-work.txt) | Not a workout: four pomodoros of focused work | 2:00:00 |
-| [`stretch-open-ended.txt`](stretch-open-ended.txt) | A final step with no duration that runs until you skip it | open |
+| [`full-body.txt`](full-body.txt) | Kettlebell swings, push-ups, goblet squats, band rows and presses as push and pull supersets, with a short core finisher | 25 min |
+| [`upper-body.txt`](upper-body.txt) | Rows, presses, curls, raises and triceps with one kettlebell and bands, each side worked on its own | 30 min |
+| [`lower-body.txt`](lower-body.txt) | Goblet squats with Romanian deadlifts, split squats and swings, glute bridges, band walks and calves | 25 min |
+| [`core.txt`](core.txt) | Dead bugs, shoulder taps, side planks and reverse crunches in a three-round circuit, back-friendly | 15 min |
+| [`chest.txt`](chest.txt) | Push-ups from three angles, kettlebell floor press, band chest press, pullovers and triceps | 20 min |
+| [`breathing-4-7-8.txt`](breathing-4-7-8.txt) | Very short steps repeated in cycles | 3 min |
+
+All workouts need only a kettlebell (10 to 16 kg is a good start), a resistance band and a chair. They follow the ACSM guidance of training every major muscle group at least twice a week: Full body twice a week, or Upper, Lower and Core on separate days with Chest as an extra. Each step is a time box: do as many good reps as fit, and when that gets easy, use a heavier bell, a stronger band or longer steps. Push and pull moves are paired with a short switch between them, which saves time without losing volume.
 
 ## Writing your own
 

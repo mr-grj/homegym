@@ -117,9 +117,9 @@ Hollow hold 30s
 | `> text` | A note shown under the current step |
 | `Exercise` | No duration: runs until you press `→` |
 
-The [`examples/`](examples) folder has ready-made routines for strength, HIIT, mobility, breathing and focused work. Paste one into **+ Routine** in the Text view and adjust it in either view.
+A new install starts with six ready-made routines: Full body, Upper body, Lower body, Core, Chest and a breathing exercise. The workouts need only a kettlebell, a resistance band and a chair. They are also in the [`examples/`](examples) folder, so you can paste one into **+ Routine** in the Text view and adjust it in either view.
 
-To make a variation of a routine, open it, change what you need and press **Save as new** (`⌘⇧⏎`). The original stays as it was, and the copy is named for you ("Full body (20 min) copy") unless you give it a new title.
+To make a variation of a routine, open it, change what you need and press **Save as new** (`⌘⇧⏎`). The original stays as it was, and the copy is named for you ("Full body (25 min) copy") unless you give it a new title.
 
 ## Exercise demos
 

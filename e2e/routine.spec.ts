@@ -1,4 +1,4 @@
-import { countDown, expect, recorded, shortcut, test } from './fixtures'
+import { addRoutine, CORE, countDown, expect, recorded, shortcut, test } from './fixtures'
 
 const WORK = [660, 990]
 const REST = [660, 440]
@@ -6,7 +6,8 @@ const TICK = [880]
 const READY = [660]
 
 test('a routine moves through work and rest with cues and controls', async ({ app }) => {
-  await app.locator('.chip-main', { hasText: 'Core' }).click()
+  await addRoutine(app, CORE)
+  await app.locator('.chip-main', { hasText: 'Core (10 min)' }).click()
   const stage = app.locator('.stage')
   const label = app.locator('.label')
   await expect(stage).toHaveAttribute('data-state', 'armed')
@@ -100,7 +101,8 @@ test('a routine that runs to the end opens the finish sheet', async ({ app }) =>
 })
 
 test('the voice says only the step you land on and stays quiet while paused', async ({ app }) => {
-  await app.locator('.chip-main', { hasText: 'Core' }).click()
+  await addRoutine(app, CORE)
+  await app.locator('.chip-main', { hasText: 'Core (10 min)' }).click()
   await shortcut(app, 'Space')
   await shortcut(app, 'ArrowRight')
   await shortcut(app, 'ArrowRight')
@@ -119,7 +121,7 @@ test('the voice says only the step you land on and stays quiet while paused', as
 })
 
 test('discarding a workout logs nothing', async ({ app }) => {
-  await app.locator('.chip-main', { hasText: 'Tabata' }).click()
+  await app.locator('.chip-main', { hasText: 'Chest' }).click()
   await shortcut(app, 'Space')
   await app.clock.runFor(5000)
   await shortcut(app, 'Escape')
@@ -129,7 +131,7 @@ test('discarding a workout logs nothing', async ({ app }) => {
 })
 
 test('an unstarted routine closes without asking', async ({ app }) => {
-  await app.locator('.chip-main', { hasText: 'Tabata' }).click()
+  await app.locator('.chip-main', { hasText: 'Chest' }).click()
   await shortcut(app, 'Escape')
   await expect(app.locator('.launcher')).toBeVisible()
 })
@@ -139,7 +141,8 @@ test('sound and voice switches mute the cues and are remembered', async ({ app }
   await shortcut(app, 'v')
   await expect(app.locator('[data-tool=mute]')).toHaveAttribute('data-off')
   await expect(app.locator('[data-tool=voice]')).toHaveAttribute('data-off')
-  await app.locator('.chip-main', { hasText: 'Core' }).click()
+  await addRoutine(app, CORE)
+  await app.locator('.chip-main', { hasText: 'Core (10 min)' }).click()
   await shortcut(app, 'Space')
   await app.clock.runFor(36_000)
   await expect(app.locator('.label')).toHaveText('Glute bridge')
@@ -154,7 +157,8 @@ test('sound and voice switches mute the cues and are remembered', async ({ app }
 })
 
 test('the edit shortcut opens the running routine', async ({ app }) => {
-  await app.locator('.chip-main', { hasText: 'Core' }).click()
+  await addRoutine(app, CORE)
+  await app.locator('.chip-main', { hasText: 'Core (10 min)' }).click()
   await shortcut(app, 'Space')
   await shortcut(app, 'e')
   await expect(app.locator('.editor h2')).toHaveText('Edit routine')

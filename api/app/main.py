@@ -16,7 +16,8 @@ from fastapi import Path as PathParam
 from pydantic import BaseModel, Field, JsonValue
 
 DB_PATH = Path(os.environ.get("HOMEGYM_DB", "homegym.db"))
-SEED = Path(__file__).with_name("seed.txt")
+SEEDS = Path(__file__).with_name("seeds")
+STARTERS = ("full-body", "upper-body", "lower-body", "core", "chest", "breathing-4-7-8")
 SCHEMA_VERSION = 2
 MAX_SETTING_BYTES = 200_000
 SHORT_LINK = re.compile(r"https://on\.soundcloud\.com/(\w+)")
@@ -102,15 +103,15 @@ def to_session(row: sqlite3.Row) -> Session:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """Create or migrate the schema and seed the starter routine on first boot."""
+    """Create or migrate the schema and seed the starter routines on first boot."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with db() as conn:
         version = conn.execute("PRAGMA user_version").fetchone()[0]
         conn.executescript(SCHEMA)
         if version == 0:
-            conn.execute(
+            conn.executemany(
                 "INSERT INTO routines (source, updated_at) VALUES (?, ?)",
-                (SEED.read_text(encoding="utf-8"), utcnow()),
+                [((SEEDS / f"{name}.txt").read_text(encoding="utf-8"), utcnow()) for name in STARTERS],
             )
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
     yield

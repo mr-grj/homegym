@@ -7,8 +7,8 @@ test('the demo stays in the browser', async ({ page }) => {
   const calls: string[] = []
   page.on('request', (request) => request.url().includes('/api/') && calls.push(request.url()))
   await page.goto('./')
-  await expect(page.locator('.routines .chip-main')).toHaveCount(7)
-  await expect(page.locator('.routines .chip-main').first()).toContainText('Full body (20 min)')
+  await expect(page.locator('.routines .chip-main')).toHaveCount(6)
+  await expect(page.locator('.routines .chip-main').first()).toContainText('Full body (25 min)')
   await expect(page.locator('.demo-badge')).toHaveAttribute('href', 'https://github.com/mr-grj/homegym')
   await enter(page, '1s')
   await expect(page.locator('.toast')).toContainText('Logged Timer · 1s')
@@ -27,7 +27,7 @@ test('the demo works with storage blocked', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto('./')
-  await expect(page.locator('.routines .chip-main')).toHaveCount(7)
+  await expect(page.locator('.routines .chip-main')).toHaveCount(6)
   expect(errors).toEqual([])
 })
 
@@ -67,9 +67,9 @@ test.describe('touch', () => {
     await app.clock.runFor(8000)
     await stage.locator('.face').tap()
     await expect(stage).toHaveAttribute('data-state', 'paused')
-    await expect(app.locator('.time')).toHaveText('0:27')
+    await expect(app.locator('.time')).toHaveText('0:37')
     await stage.locator('.controls [data-tip^="Skip"]').tap()
-    await expect(app.locator('.label')).toHaveText('Glute bridge')
+    await expect(app.locator('.label')).toHaveText('Bird dog')
   })
 })
 

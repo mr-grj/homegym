@@ -5,7 +5,7 @@ type Data = { next: number; routines: RoutineRecord[]; sessions: Session[]; sett
 
 const KEY = 'homegym.demo'
 const PLAYLIST = 'https://soundcloud.com/fitleague/sets/gym-motivation-workout-music'
-const ORDER = ['full-body-20', 'core-10', 'tabata', 'mobility-morning', 'stretch-open-ended', 'breathing-4-7-8', 'deep-work']
+const ORDER = ['full-body', 'upper-body', 'lower-body', 'core', 'chest', 'breathing-4-7-8']
 const examples = import.meta.glob<string>('../../examples/*.txt', { query: '?raw', import: 'default', eager: true })
 const rank = (path: string) => {
   const index = ORDER.indexOf(path.split('/').pop()!.replace(/\.txt$/, ''))
@@ -39,9 +39,9 @@ function seed(): Data {
     }
   }
   const sessions = [
-    logged(1, sources[0], at(1, 7, 30), 1200, 7, 'Goblet squats felt easy. Go to 12 kg next time.'),
+    logged(1, sources[0], at(1, 7, 30), 1500, 7, 'Goblet squats felt easy. Go to 12 kg next time.'),
     logged(2, undefined, at(1, 10), 1500, null),
-    logged(3, sources[1], at(3, 18, 15), 600, 6),
+    logged(3, sources[1], at(3, 18, 15), 1800, 6),
   ]
   const music = { recent: [{ url: PLAYLIST, kind: 'soundcloud', list: PLAYLIST, label: 'Gym Motivation & Workout Music' }] }
   return { next: 100, routines, sessions, settings: { 'homegym.recent': ['25m focus', '5m', '1:30'], 'homegym.music': music } }

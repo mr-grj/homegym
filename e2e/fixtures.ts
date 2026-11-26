@@ -116,6 +116,37 @@ export async function enter(page: Page, text: string) {
   await page.locator('.entry-input').press('Enter')
 }
 
+/** A short core routine with fixed timings, so timer tests do not depend on the example routines. */
+export const CORE = `# Core (10 min)
+
+## Activation
+Dead bug 30s
+Glute bridge 30s
+
+## Circuit ×3
+Plank 45s
+> elbows under shoulders · squeeze glutes
+~ Rest 15s
+Side plank, left 30s
+Side plank, right 30s
+~ Rest 15s
+Hollow hold 30s
+> lower back pressed into the floor
+~ Rest 15s
+`
+
+/** Save a new routine written as text and wait for its chip. */
+export async function addRoutine(page: Page, source: string) {
+  await page.locator('.chip.ghost', { hasText: 'Routine' }).click()
+  await expect(page.locator('.b-title')).toBeFocused()
+  await page.keyboard.press('ControlOrMeta+e')
+  await page.locator('.editor textarea').fill(source)
+  await page.keyboard.press('ControlOrMeta+e')
+  await expect(page.locator('.builder')).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expect(page.locator('.editor')).toHaveCount(0)
+}
+
 /** Press a global shortcut with nothing focused. */
 export async function shortcut(page: Page, key: string) {
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())

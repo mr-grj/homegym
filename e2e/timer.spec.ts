@@ -12,7 +12,7 @@ test('the clock understands typed timers', async ({ app }) => {
     ['1h 15m', 'start 1:15:00 countdown'],
     ['5m plank', 'start 5:00 countdown · plank'],
     ['', 'start stopwatch'],
-    ['core', 'open Core (10 min)'],
+    ['core', 'open Core (15 min)'],
     ['https://music.youtube.com/playlist?list=PLx', 'load this music'],
     ['abc', 'No match. Try 25m, 1:30 or 90s'],
   ]) {
@@ -170,10 +170,10 @@ test.describe('with the real clock', () => {
   test('a reload keeps the running timer', async ({ app }) => {
     await app.locator('.chip-main', { hasText: 'Core' }).click()
     await shortcut(app, 'Space')
-    await expect(app.locator('.time')).toHaveText('0:28', { timeout: 9000 })
+    await expect(app.locator('.time')).toHaveText('0:38', { timeout: 9000 })
     await app.reload()
     await expect(app.locator('.stage')).toHaveAttribute('data-state', 'running')
-    await expect(app.locator('.label')).toHaveText('Dead bug')
-    await expect(app.locator('.time')).toHaveText(/0:2[0-8]/)
+    await expect(app.locator('.label')).toHaveText('Cat-cow')
+    await expect(app.locator('.time')).toHaveText(/0:3[0-8]/)
   })
 })

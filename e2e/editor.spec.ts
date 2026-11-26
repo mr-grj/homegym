@@ -78,18 +78,18 @@ test('save as new keeps the original and names the copy', async ({ app }) => {
   await expect(app.locator('.editor h2')).toHaveText('Edit routine')
   await app.locator('.editor').focus()
   await app.keyboard.press('ControlOrMeta+Shift+Enter')
-  await expect(app.locator('.toast')).toContainText('Saved as “Core (10 min) copy”')
-  await expect(chip(app, 'Core (10 min) copy')).toBeVisible()
-  await expect(app.locator('.routines .chip-main', { hasText: /^Core \(10 min\)10:00$/ })).toHaveCount(1)
+  await expect(app.locator('.toast')).toContainText('Saved as “Core (15 min) copy”')
+  await expect(chip(app, 'Core (15 min) copy')).toBeVisible()
+  await expect(app.locator('.routines .chip-main', { hasText: /^Core \(15 min\)14:20$/ })).toHaveCount(1)
 })
 
 test('deleting a routine can be undone', async ({ app }) => {
-  await chip(app, 'Tabata').locator('.chip-edit').click()
+  await chip(app, 'Chest').locator('.chip-edit').click()
   await app.locator('.editor .btn.danger').click()
-  await expect(app.locator('.toast')).toContainText('Deleted Tabata (12 min)')
-  await expect(chip(app, 'Tabata')).toHaveCount(0)
+  await expect(app.locator('.toast')).toContainText('Deleted Chest (20 min)')
+  await expect(chip(app, 'Chest')).toHaveCount(0)
   await app.keyboard.press('ControlOrMeta+z')
-  await expect(chip(app, 'Tabata')).toHaveCount(1)
+  await expect(chip(app, 'Chest')).toHaveCount(1)
 })
 
 test('escape asks before throwing away edits', async ({ app }) => {
@@ -106,7 +106,7 @@ test('escape asks before throwing away edits', async ({ app }) => {
   await app.locator('.b-title').press('Escape')
   await expect(app.locator('.editor')).toHaveCount(0)
   expect(questions).toEqual(['Discard your changes?', 'Discard your changes?'])
-  await expect(chip(app, 'Core (10 min)')).toBeVisible()
+  await expect(chip(app, 'Core (15 min)')).toBeVisible()
 })
 
 test('the help sheet lists the shortcuts and any key closes it', async ({ app }) => {

@@ -9,7 +9,12 @@ from fastapi.testclient import TestClient
 
 from app import main
 
-SEED = (Path(main.__file__).with_name("seed.txt")).read_text(encoding="utf-8")
+EXAMPLES = Path(__file__).parents[2] / "examples"
+
+
+def starter(folder: Path, name: str) -> str:
+    """The text of one starter routine file."""
+    return (folder / f"{name}.txt").read_text(encoding="utf-8")
 
 
 def session_body(**overrides: object) -> dict[str, object]:
@@ -43,15 +48,24 @@ def test_health(client: TestClient) -> None:
     assert client.get("/api/health").json() == {"status": "ok"}
 
 
-def test_first_boot_seeds_one_routine_and_sets_schema_version(client: TestClient, db_path: Path) -> None:
+def test_first_boot_seeds_the_starter_routines_and_sets_schema_version(client: TestClient, db_path: Path) -> None:
     routines = client.get("/api/routines").json()
-    assert [r["source"] for r in routines] == [SEED]
+    assert [r["source"] for r in routines] == [starter(main.SEEDS, name) for name in main.STARTERS]
+    titles = [r["source"].splitlines()[0] for r in routines]
+    assert titles[:2] == ["# Full body (25 min)", "# Upper Body Strength (30 min)"]
     with sqlite3.connect(db_path) as conn:
         assert conn.execute("PRAGMA user_version").fetchone()[0] == main.SCHEMA_VERSION
 
 
+def test_starter_routines_match_the_examples() -> None:
+    assert sorted(p.name for p in main.SEEDS.glob("*.txt")) == sorted(f"{name}.txt" for name in main.STARTERS)
+    for name in main.STARTERS:
+        assert starter(main.SEEDS, name) == starter(EXAMPLES, name)
+
+
 def test_restart_keeps_data_without_seeding_again(client: TestClient) -> None:
-    client.delete("/api/routines/1")
+    for routine in client.get("/api/routines").json():
+        client.delete(f"/api/routines/{routine['id']}")
     with TestClient(main.app) as again:
         assert again.get("/api/routines").json() == []
 

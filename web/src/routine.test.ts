@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest'
-import seed from '../../api/app/seed.txt?raw'
 import {
   blockExercises,
   durationText,
@@ -30,10 +29,6 @@ function roundTrip(source: string) {
 describe('round trip', () => {
   test.each(Object.entries(examples))('%s is written back unchanged', (_, source) => {
     expect(roundTrip(source).trim()).toBe(source.trim())
-  })
-
-  test('seed routine', () => {
-    expect(roundTrip(seed).trim()).toBe(seed.trim())
   })
 
   test.each([
