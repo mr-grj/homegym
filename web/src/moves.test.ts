@@ -85,6 +85,9 @@ describe('matching names', () => {
     ['Overhead triceps extensions', 'tricepsExtension'],
     ['Bent-over band rows', 'bandBentOverRow'],
     ['Resistance band rows', 'standingBandRow'],
+    ['Lying toe taps', 'toeTaps'],
+    ['Chair dips', 'benchDip'],
+    ['Dumbbell kickbacks', 'kickback'],
   ])('%s shows %s', (label, id) => {
     expect(moveFor(label)?.id).toBe(id)
   })
@@ -126,6 +129,12 @@ describe('matching names', () => {
     'Kettlebell row',
     'Kettlebell curl',
     'Lat stretch',
+    'Dips',
+    'Triceps dips',
+    'Kickbacks',
+    'Toe taps',
+    'French press',
+    'Arnold press',
     '',
   ])('%s shows nothing', (label) => {
     expect(moveFor(label)).toBeNull()
