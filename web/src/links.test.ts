@@ -50,16 +50,17 @@ describe('voices', () => {
     voice('Ava (Premium)', 'en-US'),
     voice('Microsoft Aria Online (Natural) - English (United States)', 'en-US', { localService: false }),
     voice('Ioana', 'ro-RO'),
+    voice('Daniel', 'en_GB'),
   ]
 
-  test('best sounding first, novelty voices dropped', () => {
-    expect(rankVoices(voices, 'en-US').map(voiceName)).toEqual(['Aria', 'Ava', 'Samantha'])
-    expect(rankVoices(voices, 'ro-RO').map((v) => v.name)).toEqual(['Ioana'])
+  test('English only, best sounding first, novelty voices dropped', () => {
+    expect(rankVoices(voices).map(voiceName)).toEqual(['Aria', 'Ava', 'Samantha', 'Daniel'])
   })
 
   test('a saved voice wins when present', () => {
-    expect(pickVoice(voices, 'en-US', 'Samantha')?.name).toBe('Samantha')
-    expect(pickVoice(voices, 'en-US', 'Missing')?.name).toContain('Aria')
-    expect(pickVoice(voices, 'de-DE')).toBeNull()
+    expect(pickVoice(voices, 'Samantha')?.name).toBe('Samantha')
+    expect(pickVoice(voices, 'Missing')?.name).toContain('Aria')
+    expect(pickVoice(voices, 'Ioana')?.name).toContain('Aria')
+    expect(pickVoice([voice('Ioana', 'ro-RO')])).toBeNull()
   })
 })

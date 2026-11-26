@@ -1,12 +1,18 @@
 import { useEffect, useSyncExternalStore } from 'react'
 
 let audio: AudioContext | null = null
+let speechUnlocked = false
 
-/** Create or resume the audio context and start loading voices; must run inside a user gesture. */
+/** Create or resume the audio context, start loading voices and unlock speech for later cues (iOS); must run inside a user gesture. */
 export function unlockAudio() {
   audio ??= new AudioContext()
   if (audio.state === 'suspended') void audio.resume()
-  if ('speechSynthesis' in window) speechSynthesis.getVoices()
+  if (!('speechSynthesis' in window) || speechUnlocked) return
+  speechUnlocked = true
+  speechSynthesis.getVoices()
+  const silent = new SpeechSynthesisUtterance(' ')
+  silent.volume = 0
+  speechSynthesis.speak(silent)
 }
 
 function tone(frequency: number, duration: number, delay = 0, volume = 0.22) {
@@ -52,15 +58,8 @@ const QUALITY: [RegExp, number, string][] = [
 export const NATURAL = 20
 
 const tag = (lang: string) => lang.replace(/_/g, '-').toLowerCase()
-
-/** Base language of a BCP 47 tag, `en` when missing. */
-export const baseLang = (lang?: string) => tag(lang || 'en').split('-')[0]
-
-function region(lang?: string) {
-  const base = baseLang(lang)
-  const wanted = lang && tag(lang).includes('-') ? lang : navigator.languages?.find((l) => baseLang(l) === base)
-  return wanted && tag(wanted).includes('-') ? tag(wanted) : base === 'en' ? 'en-us' : ''
-}
+const english = (lang: string) => tag(lang).split('-')[0] === 'en'
+const region = () => tag(navigator.languages?.find((l) => english(l) && l.includes('-')) ?? 'en-US')
 
 /** How human a voice sounds, plus a short quality label. */
 export function voiceQuality(voice: SpeechSynthesisVoice) {
@@ -69,21 +68,20 @@ export function voiceQuality(voice: SpeechSynthesisVoice) {
   return { score: (match?.[1] ?? 0) - (ROBOTIC.test(voice.name) ? 20 : 0), label: match?.[2] ?? '' }
 }
 
-/** Voices for `lang`, best sounding first, without novelty voices. */
-export function rankVoices(voices: readonly SpeechSynthesisVoice[], lang?: string) {
-  const base = baseLang(lang)
-  const local = region(lang)
+/** English voices, best sounding first (the reader's own accent breaks ties), without novelty voices. */
+export function rankVoices(voices: readonly SpeechSynthesisVoice[]) {
+  const local = region()
   const score = (v: SpeechSynthesisVoice) => voiceQuality(v).score + (tag(v.lang) === local ? 5 : 0) + (v.default ? 3 : 0)
   return voices
-    .filter((v) => baseLang(v.lang) === base && !NOVELTY.test(v.name))
+    .filter((v) => english(v.lang) && !NOVELTY.test(v.name))
     .map((v) => ({ v, s: score(v) }))
     .sort((a, b) => b.s - a.s)
     .map(({ v }) => v)
 }
 
-/** The saved voice for `lang` when this device has it, else the best sounding one. */
-export function pickVoice(voices: readonly SpeechSynthesisVoice[], lang?: string, preferred?: string) {
-  const ranked = rankVoices(voices, lang)
+/** The saved voice when this device has it, else the best sounding one. */
+export function pickVoice(voices: readonly SpeechSynthesisVoice[], preferred?: string) {
+  const ranked = rankVoices(voices)
   return ranked.find((v) => preferred && (v.name === preferred || v.voiceURI === preferred)) ?? ranked[0] ?? null
 }
 
@@ -98,23 +96,31 @@ export const voiceName = (voice: SpeechSynthesisVoice) =>
 
 const FAILED = new Set(['network', 'synthesis-failed', 'synthesis-unavailable', 'voice-unavailable'])
 
-/** Read text aloud with the saved or best voice for `lang`, falling back to an offline voice. */
-export function speak(text: string, lang?: string, preferred?: string) {
+/** Read text aloud in English with the saved or best voice, replacing anything still being said; falls back to an offline voice. */
+export function speak(text: string, preferred?: string) {
   if (!('speechSynthesis' in window)) return
   speechSynthesis.cancel()
   const say = (voice: SpeechSynthesisVoice | null, retry: boolean) => {
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = voice?.lang.replace(/_/g, '-') ?? lang ?? 'en'
+    utterance.lang = voice?.lang.replace(/_/g, '-') ?? 'en-US'
     utterance.voice = voice
     utterance.rate = 1.05
     utterance.onerror = (e) => {
       if (!retry || !voice || voice.localService || !FAILED.has(e.error)) return
-      say(rankVoices(speechSynthesis.getVoices(), lang).find((v) => v.localService) ?? null, false)
+      say(rankVoices(speechSynthesis.getVoices()).find((v) => v.localService) ?? null, false)
     }
     speechSynthesis.speak(utterance)
   }
-  say(pickVoice(speechSynthesis.getVoices(), lang, preferred), true)
+  say(pickVoice(speechSynthesis.getVoices(), preferred), true)
 }
+
+/** Stop speaking now. */
+export function hush() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel()
+}
+
+/** Milliseconds `text` takes to say, roughly, for ducking music under it. */
+export const speechLength = (text: string) => 900 + text.length * 70
 
 let voiceList: readonly SpeechSynthesisVoice[] = []
 const refreshVoices = () => (voiceList = speechSynthesis.getVoices())

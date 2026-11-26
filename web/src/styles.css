@@ -3325,14 +3325,6 @@ kbd {
   }
 }
 
-.voice-lang h4 {
-  margin: 18px 0 0;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--muted);
-}
-
 .voice-list {
   grid-template-columns: minmax(0, 1fr);
   max-height: min(320px, 40vh);

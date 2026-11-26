@@ -84,7 +84,7 @@ function installFakes() {
   }
 
   Object.assign(window, { AudioContext: FakeAudioContext, YT: { Player: FakePlayer } })
-  speechSynthesis.speak = (utterance) => void log.speech.push(utterance.text)
+  speechSynthesis.speak = (utterance) => void (utterance.text.trim() && log.speech.push(utterance.text))
   speechSynthesis.cancel = () => {}
 }
 

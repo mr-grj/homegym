@@ -11,7 +11,6 @@ export type Step = {
 export type Routine = {
   id: number | null
   title: string
-  lang?: string
   quick: boolean
   blocks: { name: string; seconds: number | null }[]
   steps: Step[]
@@ -133,7 +132,6 @@ export function parseRoutine(source: string, id: number | null = null): Routine 
   return {
     id,
     title: doc.title || used[0]?.name || 'Untitled',
-    lang: /[ăâîșțşţ]/i.test(source) ? 'ro-RO' : undefined,
     quick: false,
     blocks: used.map((block) => {
       const once = totalSeconds(block.steps)

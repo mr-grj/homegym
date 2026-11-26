@@ -1,19 +1,8 @@
-import { NATURAL, baseLang, pickVoice, rankVoices, speak, useVoices, voiceName, voiceQuality } from '../sound'
+import { NATURAL, pickVoice, rankVoices, speak, useVoices, voiceName, voiceQuality } from '../sound'
 import { Icon } from './Icon'
 import { tip } from './Tooltips'
 
-const samples: Record<string, string> = {
-  en: 'Goblet squat. Next: Push-ups',
-  ro: 'Genuflexiuni. Urmează: Flotări',
-}
-
-const languageName = (lang: string) => {
-  try {
-    return new Intl.DisplayNames(['en'], { type: 'language' }).of(baseLang(lang)) ?? lang
-  } catch {
-    return lang
-  }
-}
+const SAMPLE = 'Rest. Up next: Goblet squat'
 
 function upgradeHint() {
   const ua = navigator.userAgent
@@ -39,25 +28,24 @@ function upgradeHint() {
 
 export function VoicePicker({
   on,
-  langs,
   chosen,
   onToggle,
   onChoose,
 }: {
   on: boolean
-  langs: string[]
-  chosen: Record<string, string>
+  chosen: string
   onToggle: () => void
-  onChoose: (lang: string, name: string | null) => void
+  onChoose: (name: string) => void
 }) {
   const voices = useVoices()
   const supported = 'speechSynthesis' in window
-  const best = Math.max(-1, ...langs.map((lang) => rankVoices(voices, lang)[0]).filter(Boolean).map((v) => voiceQuality(v).score))
+  const ranked = rankVoices(voices)
+  const auto = pickVoice(voices)
+  const current = chosen && ranked.some((v) => v.name === chosen) ? chosen : null
 
-  const choose = (lang: string, name: string | null) => {
-    const base = baseLang(lang)
-    onChoose(base, name)
-    speak(samples[base] ?? samples.en, lang, name ?? undefined)
+  const choose = (name: string) => {
+    onChoose(name)
+    speak(SAMPLE, name || undefined)
   }
 
   return (
@@ -70,50 +58,39 @@ export function VoicePicker({
         <input type="checkbox" checked={on} onChange={onToggle} />
         <span>
           <b>Read each exercise aloud</b>
-          <small>Says the exercise as it starts and what comes next during rests. Press V to switch it anytime.</small>
+          <small>Names each exercise as it starts and what comes next during rests. Press V to switch it anytime.</small>
         </span>
       </label>
 
       {!supported && <p className="picker-error">This browser can’t read aloud.</p>}
 
       {supported &&
-        langs.map((lang) => {
-          const base = baseLang(lang)
-          const ranked = rankVoices(voices, lang)
-          const auto = pickVoice(voices, lang)
-          const current = chosen[base] && ranked.some((v) => v.name === chosen[base]) ? chosen[base] : null
-          return (
-            <section key={base} className="voice-lang">
-              {langs.length > 1 && <h4>{languageName(lang)}</h4>}
-              {ranked.length === 0 ? (
-                <p className="voice-none">No {languageName(lang)} voice on this device. The browser’s default voice reads it.</p>
-              ) : (
-                <ul className="recent-music voice-list">
-                  <li data-active={!current || undefined}>
-                    <button className="grow" onClick={() => choose(lang, null)} {...tip('Use the best voice this device has and hear it')}>
-                      <Icon name="voice" />
-                      <span>Automatic</span>
-                      <small>{auto && [voiceName(auto), voiceQuality(auto).label].filter(Boolean).join(' · ')}</small>
-                    </button>
-                  </li>
-                  {ranked.map((v) => (
-                    <li key={v.voiceURI || v.name} data-active={current === v.name || undefined}>
-                      <button className="grow" onClick={() => choose(lang, v.name)} {...tip(`Use ${voiceName(v)} and hear it`)}>
-                        <Icon name="play" />
-                        <span>{voiceName(v)}</span>
-                        <small>{[voiceQuality(v).label, v.lang.replace(/_/g, '-').split('-')[1]?.toUpperCase()].filter(Boolean).join(' · ')}</small>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )
-        })}
+        (ranked.length === 0 ? (
+          <p className="voice-none">No English voice on this device. The browser’s default voice reads it.</p>
+        ) : (
+          <ul className="recent-music voice-list">
+            <li data-active={!current || undefined}>
+              <button className="grow" onClick={() => choose('')} {...tip('Use the best voice this device has and hear it')}>
+                <Icon name="voice" />
+                <span>Automatic</span>
+                <small>{auto && [voiceName(auto), voiceQuality(auto).label].filter(Boolean).join(' · ')}</small>
+              </button>
+            </li>
+            {ranked.map((v) => (
+              <li key={v.voiceURI || v.name} data-active={current === v.name || undefined}>
+                <button className="grow" onClick={() => choose(v.name)} {...tip(`Use ${voiceName(v)} and hear it`)}>
+                  <Icon name="play" />
+                  <span>{voiceName(v)}</span>
+                  <small>{[voiceQuality(v).label, v.lang.replace(/_/g, '-').split('-')[1]?.toUpperCase()].filter(Boolean).join(' · ')}</small>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ))}
 
       {supported && (
         <p className="howto voice-hint">
-          {best < NATURAL ? <>Sounds robotic? {upgradeHint()}</> : 'Voices come from this device, so each device keeps its own pick.'}
+          {(ranked[0] ? voiceQuality(ranked[0]).score : -1) < NATURAL ? <>Sounds robotic? {upgradeHint()}</> : 'Voices come from this device, so each device keeps its own pick.'}
         </p>
       )}
     </div>

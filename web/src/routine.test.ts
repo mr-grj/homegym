@@ -20,11 +20,9 @@ import {
 
 const examples = import.meta.glob<string>('../../examples/*.txt', { query: '?raw', import: 'default', eager: true })
 
-const withoutLang = (source: string) => ({ ...parseRoutine(source), lang: undefined })
-
 function roundTrip(source: string) {
   const written = serializeDoc(parseDoc(source))
-  expect(withoutLang(written)).toEqual(withoutLang(source))
+  expect(parseRoutine(written)).toEqual(parseRoutine(source))
   expect(serializeDoc(parseDoc(written))).toBe(written)
   return written
 }
@@ -142,11 +140,6 @@ describe('parseRoutine', () => {
     expect(blockExercises(routine.steps, 0)).toEqual(['Jacks'])
     expect(blockExercises(routine.steps, 1)).toEqual(['Plank', 'Side plank, left'])
     expect(blockExercises(routine.steps, 2)).toEqual([])
-  })
-
-  test('detects Romanian', () => {
-    expect(parseRoutine('# Încălzire\nGenuflexiuni 30s').lang).toBe('ro-RO')
-    expect(parseRoutine('# Workout\nSquat 30s').lang).toBeUndefined()
   })
 })
 

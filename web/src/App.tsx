@@ -16,8 +16,7 @@ import { VoicePicker } from './components/Voice'
 import { human, keyLabel } from './format'
 import { music, parseMusic, resolveSource, useMusic, type Source } from './music'
 import { parseRoutine, stepLibrary, uniqueTimers, type Routine } from './routine'
-import { baseLang } from './sound'
-import { flushSettings, pullSettings, usePersistent, useSetting } from './store'
+import { flushSettings, pullSettings, readLocal, usePersistent, useSetting } from './store'
 import { arm, PREP_SECONDS, totalElapsed, type Run } from './timer'
 import { PREFS, useWorkout, type Prefs } from './workout'
 
@@ -37,7 +36,7 @@ export default function App() {
   const [stored, setPrefs] = useSetting<Partial<Prefs>>('homegym.prefs', PREFS)
   const prefs: Prefs = { ...PREFS, ...stored }
   const [recent, setRecent] = useSetting<string[]>('homegym.recent', [])
-  const [voices, setVoices] = usePersistent<Record<string, string>>('homegym.voices', {})
+  const [voice, setVoice] = usePersistent('homegym.voice', readLocal<Record<string, string>>('homegym.voices', {}).en ?? '')
   const [panel, setPanel] = useState<Panel>(null)
   const [toast, setToast] = useState<Toast | null>(null)
   const launcher = useRef<HTMLInputElement>(null)
@@ -45,11 +44,6 @@ export default function App() {
 
   const routines = useMemo(() => records.map((r) => parseRoutine(r.source, r.id)), [records])
   const library = useMemo(() => stepLibrary(records.map((r) => r.source)), [records])
-  const langs = useMemo(() => {
-    const found = new Map([['en', 'en']])
-    for (const r of routines) if (r.lang && !found.has(baseLang(r.lang))) found.set(baseLang(r.lang), r.lang)
-    return [...found.values()]
-  }, [routines])
 
   const notify = (text: string, undo?: () => void, editor?: boolean) => setToast({ id: Date.now(), text, undo, editor })
   const dropEditorToast = () => setToast((t) => (t?.editor ? null : t))
@@ -100,7 +94,7 @@ export default function App() {
 
   const workout = useWorkout({
     prefs,
-    voices,
+    voice,
     onLog: (done, minimum) => void logQuick(done, minimum),
     onReview: () => setPanel('finish'),
   })
@@ -375,10 +369,9 @@ export default function App() {
         <Modal onClose={() => setPanel(null)}>
           <VoicePicker
             on={prefs.voice}
-            langs={langs}
-            chosen={voices}
+            chosen={voice}
             onToggle={() => flip('voice')}
-            onChoose={(lang, name) => setVoices((v) => ({ ...v, [lang]: name ?? '' }))}
+            onChoose={setVoice}
           />
         </Modal>
       )}

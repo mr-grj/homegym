@@ -23,7 +23,7 @@
 - **Instant timers.** Type `25m`, `1:30` or `5m plank` into the big clock and press Enter. An empty Enter starts a stopwatch.
 - **Routines your way.** Build them with fields (pick an exercise you used before, tap a duration, drag to reorder) or write them as plain text. Both show a live preview as you go.
 - **Readable from across the room.** Huge digits, colour-coded work and rest phases, a progress fill and a timeline of the whole routine.
-- **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and a voice that reads out the next exercise, using the most natural voice your device has or one you pick. The screen stays awake.
+- **Hands-free cues.** Countdown beeps for the last three seconds, a chime between steps, and an English voice that reads out the next exercise, using the most natural voice your device has or one you pick. The screen stays awake.
 - **Time to get into position.** Each timed exercise of 10 seconds or more opens with five seconds to set up, shown as a big countdown with the figure in its start pose, then the clock starts. Tap "Get into position" or press `G` to start early, or press `R` to turn it off.
 - **A reminder to drink.** Every rest shows a small glass filling with water next to what comes up. Tap it, or press `W`, to add 15 seconds to the rest; it refills once you've used them. Both this and the time to get into position can be switched off in the workout options (`O`).
 - **See how it's done.** When an exercise starts, a small figure shows it on a loop. During a rest it previews what comes next, marked "Up next", and it pauses with the timer. About 160 exercises are covered, in English and Romanian.

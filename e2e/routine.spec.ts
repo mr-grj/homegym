@@ -40,7 +40,7 @@ test('a routine moves through work and rest with cues and controls', async ({ ap
   await expect(label).toHaveText('Rest')
   await expect(app.locator('.app')).toHaveAttribute('data-phase', 'rest')
   await app.clock.runFor(400)
-  await expect.poll(async () => (await recorded(app)).speech.at(-1)).toBe('Rest. Next: Side plank, left')
+  await expect.poll(async () => (await recorded(app)).speech.at(-1)).toBe('Rest. Up next: Side plank, left')
 
   await shortcut(app, 'ArrowLeft')
   await expect(label).toHaveText('Plank')
@@ -93,10 +93,29 @@ test('a routine that runs to the end opens the finish sheet', async ({ app }) =>
   await expect(finish.locator('.eyebrow')).toHaveText('Complete')
   await expect(finish.locator('.big')).toHaveText('3:07')
   await expect(finish.locator('.count')).toHaveText('2/2 completed')
-  await expect.poll(async () => (await recorded(app)).speech.at(-1)).toBe('Done')
+  await expect.poll(async () => (await recorded(app)).speech.at(-1)).toBe('Workout complete')
   await app.keyboard.press('Enter')
   await expect(app.locator('.toast')).toContainText('Workout saved')
   await expect(app.locator('.today')).toHaveText('Today · 1 logged · 3m 7s')
+})
+
+test('the voice says only the step you land on and stays quiet while paused', async ({ app }) => {
+  await app.locator('.chip-main', { hasText: 'Core' }).click()
+  await shortcut(app, 'Space')
+  await shortcut(app, 'ArrowRight')
+  await shortcut(app, 'ArrowRight')
+  await app.clock.runFor(400)
+  expect((await recorded(app)).speech).toEqual(['Plank'])
+
+  await shortcut(app, 'ArrowRight')
+  await shortcut(app, 'Space')
+  await expect(app.locator('.stage')).toHaveAttribute('data-state', 'paused')
+  await app.clock.runFor(2000)
+  expect((await recorded(app)).speech).toEqual(['Plank'])
+
+  await shortcut(app, 'Space')
+  await app.clock.runFor(400)
+  expect((await recorded(app)).speech).toEqual(['Plank', 'Rest. Up next: Side plank, left'])
 })
 
 test('discarding a workout logs nothing', async ({ app }) => {

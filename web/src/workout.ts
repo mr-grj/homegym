@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from 'react'
 import { music } from './music'
 import type { Routine } from './routine'
-import { baseLang, cue, speak, unlockAudio, useWakeLock, vibrate } from './sound'
+import { cue, hush, speak, speechLength, unlockAudio, useWakeLock, vibrate } from './sound'
 import { usePersistent } from './store'
 import {
   advance,
@@ -34,6 +34,7 @@ export const POUR_DELAY = 1500
 /** A sip taken during the current rest: how many so far, and the step time of the last one. */
 export type Sips = { count: number; at: number }
 const TICK_MS = 100
+const SPEECH_DELAY = 350
 const TICKER = 'onmessage = (e) => setInterval(() => postMessage(0), e.data)'
 
 let now = Date.now()
@@ -93,12 +94,10 @@ function every(ms: number, tick: () => void) {
   }
 }
 
-const phrases = (lang?: string) =>
-  lang?.startsWith('ro') ? { next: 'Urmează', done: 'Gata. Bravo!' } : { next: 'Next', done: 'Done' }
-
 type Options = {
   prefs: Prefs
-  voices: Record<string, string>
+  /** The voice picked on this device, empty for the best one. */
+  voice: string
   /** A quick timer ended: log it if it ran for at least `minimum` seconds. */
   onLog: (run: Run, minimum: number) => void
   /** A routine ended or was stopped: show the finish sheet. */
@@ -106,10 +105,11 @@ type Options = {
 }
 
 /** The timer on screen: its state, ticking, cues, music that follows it, and every control. */
-export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
+export function useWorkout({ prefs, voice, onLog, onReview }: Options) {
   const [stored, setRun] = usePersistent<Run | null>('homegym.run', null)
   const lastLeft = useRef(0)
   const prepping = useRef(false)
+  const speech = useRef(0)
   const [sipped, setSipped] = useState({ index: -1, count: 0, at: 0 })
   const prepMs = prefs.prep ? PREP_SECONDS * 1000 : 0
   const run = stored && !stored.routine.quick && (stored.prep ?? 0) !== prepMs ? withPrep(stored, prepMs, Date.now()) : stored
@@ -121,7 +121,17 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     return `${run.finishedAt ? '✓' : run.since === null ? '❚❚' : '▶'} ${f.display} · ${f.step.label}`
   }
 
-  const say = (text: string, lang?: string) => speak(text, lang, voices[baseLang(lang)])
+  const say = (text: string, delay = 0) => {
+    clearTimeout(speech.current)
+    music.duck(delay + speechLength(text))
+    if (delay) speech.current = window.setTimeout(() => speak(text, voice), delay)
+    else speak(text, voice)
+  }
+
+  const quiet = () => {
+    clearTimeout(speech.current)
+    hush()
+  }
 
   const announce = (next: Run) => {
     const step = next.steps[next.index]
@@ -131,10 +141,8 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     if (prefs.sound) (prep ? cue.ready : step.rest ? cue.rest : cue.work)()
     vibrate(prep ? [60] : step.rest ? [80] : [120, 60, 120])
     if (!prefs.voice || next.routine.quick) return
-    music.duck(2800)
     const after = next.steps[next.index + 1]
-    const text = step.rest && after ? `${step.label}. ${phrases(next.routine.lang).next}: ${after.label}` : step.label
-    setTimeout(() => say(text, next.routine.lang), 350)
+    say(step.rest && after ? `${step.label}. Up next: ${after.label}` : step.label, SPEECH_DELAY)
   }
 
   const go = () => {
@@ -150,10 +158,10 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
   }
 
   const complete = (done: Run) => {
+    if (prefs.voice) say(done.routine.quick ? 'Done' : 'Workout complete')
     if (music.state.follow) music.fadeOut()
     if (prefs.sound) cue.done()
     vibrate([200, 100, 200, 100, 400])
-    if (prefs.voice) say(phrases(done.routine.lang).done, done.routine.lang)
     if (done.routine.quick) onLog(done, 1)
     else onReview()
   }
@@ -176,7 +184,7 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     const left = countdown(run, t) ?? 0
     if (left >= 1 && left !== lastLeft.current) {
       if (prefs.sound) cue.tick()
-      if (prefs.sound || prefs.voice) music.duck(left * 1000 + (prefs.voice && !run.routine.quick && !prep ? 2600 : 900))
+      if (prefs.sound || prefs.voice) music.duck(left * 1000 + 900)
     }
     lastLeft.current = left
   })
@@ -201,6 +209,7 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
     const t = Date.now()
     setRun(next)
     setNow(t)
+    if (next.since === null) quiet()
     if ((run?.since != null) !== (next.since != null) && !next.finishedAt) follow(next.since != null)
     if (speakIfMoved && next.since !== null && next.offset === -prepFor(next, next.index)) announce(next)
     else prepping.current = preparing(next, t)
@@ -260,6 +269,7 @@ export function useWorkout({ prefs, voices, onLog, onReview }: Options) {
 
   const stop = () => {
     if (!run) return
+    quiet()
     if (!run.startedAt || (run.finishedAt && run.routine.quick)) return setRun(null)
     follow(false)
     if (run.routine.quick) {
