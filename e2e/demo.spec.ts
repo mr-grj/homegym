@@ -71,7 +71,12 @@ test('the hint line is kept for the whole run and fits a small phone', async ({ 
   await app.setViewportSize({ width: 320, height: 640 })
   await app.locator('.chip-main', { hasText: 'Full body' }).click()
   await expect(app.locator('.demo-slot')).toHaveAttribute('data-hinted')
-  const clock = await app.locator('.time').boundingBox()
+  const layout = async () => {
+    const slot = (await app.locator('.demo-slot').boundingBox())!
+    const time = (await app.locator('.time').boundingBox())!
+    return { slot: slot.height, gap: time.y - slot.y, time: time.height }
+  }
+  const first = await layout()
   for (const label of ['Bodyweight squats', 'Hip hinges, flat back', 'Shoulder and arm circles', 'Alternating light lunges']) {
     await expect(app.locator('.label')).toHaveText(label)
     await expect(demo(app)).toBeVisible()
@@ -79,7 +84,7 @@ test('the hint line is kept for the whole run and fits a small phone', async ({ 
     expect(box.x).toBeGreaterThanOrEqual(0)
     expect(box.x + box.width).toBeLessThanOrEqual(320)
     expect(box.height).toBeLessThan(22)
-    expect(await app.locator('.time').boundingBox()).toEqual(clock)
+    expect(await layout()).toEqual(first)
     await shortcut(app, 'ArrowRight')
   }
   expect(await app.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)
