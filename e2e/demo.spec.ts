@@ -92,16 +92,22 @@ test('the hint line is kept for the whole run and fits a small phone', async ({ 
 
 test('unknown exercises show nothing and the clock never moves', async ({ app }) => {
   await app.setViewportSize({ width: 390, height: 844 })
-  await app.locator('.chip-main', { hasText: 'Morning mobility' }).click()
-  await expect(app.locator('.label')).toHaveText('Cat-cow')
-  await expect(demo(app)).toHaveAttribute('data-move', 'catCow')
-  const clock = await app.locator('.time').boundingBox()
+  await app.locator('.chip-main', { hasText: 'Cool-down stretch' }).click()
+  await expect(app.locator('.label')).toHaveText('Standing quad stretch')
+  await expect(demo(app)).toHaveAttribute('data-move', 'quadStretch')
+  const layout = async () => {
+    const slot = (await app.locator('.demo-slot').boundingBox())!
+    const time = (await app.locator('.time').boundingBox())!
+    return { slot: slot.height, gap: time.y - slot.y, time: time.height }
+  }
+  const known = await layout()
 
-  await shortcut(app, 'ArrowRight')
-  await expect(app.locator('.label')).toHaveText('Thoracic rotations')
+  for (let i = 0; i < 4; i++) await shortcut(app, 'ArrowRight')
+  await expect(app.locator('.label')).toHaveText('Anything that feels tight')
   await expect(app.locator('.demo-slot')).toHaveCount(1)
   await expect(demo(app)).toHaveCount(0)
-  expect(await app.locator('.time').boundingBox()).toEqual(clock)
+  await expect(app.locator('.demo-hint')).toHaveCount(0)
+  expect(await layout()).toEqual(known)
 
   await shortcut(app, 'Escape')
   await shortcut(app, 'Escape')
@@ -167,7 +173,7 @@ test('the builder marks exercises that have a demo and suggests a few as you typ
   await expect(app.locator('#known-work option[value="Kettlebell swing"]')).toHaveCount(1)
   expect(await options.count()).toBeLessThanOrEqual(8)
   for (const value of await options.evaluateAll((list) => list.map((o) => (o as HTMLOptionElement).value))) expect(value.toLowerCase()).toContain('kettle')
-  await label.fill('Thoracic rotations')
+  await label.fill('Russian twist')
   await expect(app.locator('.b-demo')).toHaveCount(0)
   await label.fill('KB swing')
   await expect(app.locator('.b-demo')).toHaveAttribute('data-tip', 'Shows a demo during the workout: Kettlebell swing')

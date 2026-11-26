@@ -171,6 +171,10 @@ export const HINTS = {
   kettlebellSnatch: { setup: 'Hinge and hike the bell back', form: 'Keep the bell close, punch through on top' },
   windmill: { setup: 'Bell locked out overhead, arm vertical', form: 'Keep your eyes on the bell' },
   scapularPushUp: { setup: 'High plank, arms straight, body long', form: 'Arms straight, move only shoulder blades' },
+  thoracicRotation: { setup: 'Hands under shoulders, knees under hips', form: 'Rotate from the spine, head follows hand' },
+  worldsGreatestStretch: { setup: 'Deep lunge, hands inside the front foot', form: 'Rotate and reach up, eyes on your hand' },
+  hipSwitch: { setup: 'Sit tall, both sitting bones down', form: 'Switch slowly, no bouncing at the end' },
+  hipCircles: { setup: 'Hands on hips, feet shoulder-width', form: 'Slow, controlled circles, torso steady' },
   kettlebellHighPull: { setup: 'Feet wide, bell between your feet', form: 'Drive with hips, elbow high, bell close' },
 } satisfies Partial<Record<MoveId, Hint>>
 
@@ -345,6 +349,10 @@ export const SOURCES: Record<keyof typeof HINTS, string[]> = {
   kettlebellSnatch: ['https://www.strongfirst.com/lions-roar-kettlebell-snatch/', `${EXRX}WeightExercises/Kettlebell/KBSnatch`],
   windmill: ['https://www.strongfirst.com/?p=65977', 'https://www.masterclass.com/articles/kettlebell-windmill-exercise-guide'],
   scapularPushUp: ['https://physio-pedia.com/Push_Up_Plus_Exercise', 'https://us.humankinetics.com/blogs/excerpt/push-up-with-plus-exercise'],
+  thoracicRotation: ['https://ie.physitrack.com/home-exercise-video/quadruped-thoracic-rotation', 'https://fitwill.app/exercise/8052/kneeling-thoracic-rotation/'],
+  worldsGreatestStretch: ['https://www.muscleandstrength.com/exercises/worlds-greatest-stretch', 'https://www.tomsguide.com/wellness/fitness/the-worlds-greatest-stretch-is-an-essential-part-of-my-routine-heres-how-to-do-it'],
+  hipSwitch: ['https://livestrong.com/article/13771782-cant-do-90-90-hip-switch', 'https://health.clevelandclinic.org/90-90-stretch/'],
+  hipCircles: ['https://fitbod.me/exercises/standing-hip-circle', 'https://umaine.edu/outdoorleadership/hip-circles/'],
   kettlebellHighPull: ['https://kettlebellsworkouts.com/teaching-points-for-the-kettlebell-high-pull/', 'https://motra.com/exercises/kettlebellHighPull'],
 }
 

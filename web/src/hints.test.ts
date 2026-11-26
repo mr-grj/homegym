@@ -52,7 +52,7 @@ describe('technique hints', () => {
 })
 
 describe('which hint shows when', () => {
-  const routine = parseRoutine('# R\n## A ×2\nPush-ups 30s\n~ Rest 15s\nCrunch 30s\n> slow\nThoracic rotations 30s')
+  const routine = parseRoutine('# R\n## A ×2\nPush-ups 30s\n~ Rest 15s\nCrunch 30s\n> slow\nRussian twist 30s')
   const setup = HINTS.pushUp.setup
   const form = HINTS.pushUp.form
 
@@ -104,6 +104,6 @@ describe('which hint shows when', () => {
 
   test('the stage keeps a line only when some exercise has a hint', () => {
     expect(hasHints(routine.steps)).toBe(true)
-    expect(hasHints(parseRoutine('# R\nThoracic rotations 30s\nFocus 25m').steps)).toBe(false)
+    expect(hasHints(parseRoutine('# R\nRussian twist 30s\nFocus 25m').steps)).toBe(false)
   })
 })

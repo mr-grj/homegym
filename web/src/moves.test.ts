@@ -116,10 +116,6 @@ describe('matching names', () => {
     'Plank walk',
     'Push-up to side plank',
     'Russian twist',
-    'Thoracic rotations',
-    "World's greatest stretch",
-    '90/90 hip switches',
-    'Hip circles',
     'Lunges with weights',
     'Deadlift',
     'Toe touch',
@@ -160,7 +156,7 @@ describe('matching names', () => {
     for (const source of [...Object.values(examples), seed])
       for (const step of parseRoutine(source).steps) if (!step.rest) labels.set(step.label, moveFor(step.label)?.id ?? null)
     expect(Object.fromEntries([...labels].sort(([a], [b]) => a.localeCompare(b)))).toEqual({
-      '90/90 hip switches': null,
+      '90/90 hip switches': 'hipSwitch',
       'Alternating light lunges': 'lunge',
       'Anything that feels tight': null,
       'Aplecări din șold, spatele drept': 'hipHinge',
@@ -183,7 +179,7 @@ describe('matching names', () => {
       'Glute bridge': 'gluteBridge',
       'Goblet squat': 'gobletSquat',
       'Half-kneeling hip flexor stretch': 'hipFlexorStretch',
-      'Hip circles': null,
+      'Hip circles': 'hipCircles',
       'Hip hinges, flat back': 'hipHinge',
       Hold: null,
       'Hollow hold': 'hollowHold',
@@ -204,9 +200,9 @@ describe('matching names', () => {
       'Sit comfortably': null,
       'Standing hamstring stretch': 'hamstringStretch',
       'Standing quad stretch': 'quadStretch',
-      'Thoracic rotations': null,
+      'Thoracic rotations': 'thoracicRotation',
       'Wall slides': 'wallSlide',
-      "World's greatest stretch": null,
+      "World's greatest stretch": 'worldsGreatestStretch',
     })
   })
 })

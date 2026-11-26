@@ -1470,6 +1470,55 @@ export const MOVES = {
       { hip: [0, 0.9], torso: 0, arm: [-8, -4], leg: at(0.2), farLeg: at(-0.25), hold: 250 },
     ],
   },
+  thoracicRotation: {
+    name: 'Thoracic rotation',
+    beat: 1300,
+    hold: 400,
+    poses: [
+      { hip: [-0.1, 0.55], torso: 90, head: 150, arm: [200, 215], farArm: hand(0.4), leg: [180, 270, 270] },
+      { hip: [-0.1, 0.55], torso: 90, head: 20, arm: [2, 2], farArm: hand(0.4), leg: [180, 270, 270] },
+    ],
+  },
+  worldsGreatestStretch: {
+    name: "World's greatest stretch",
+    anchor: { joint: 'ankle', at: [0.3, 0.1] },
+    beat: 1200,
+    hold: 500,
+    poses: [
+      { torso: 80, head: 95, arm: hand(0.52, 0.05), farArm: hand(0.52, 0.05), leg: [97, 186, 95], farLeg: [246, 246, 160] },
+      { torso: 92, head: 120, arm: { at: [0.3, 0.2], bend: 1 }, farArm: hand(0.52, 0.05), leg: [97, 186, 95], farLeg: [246, 246, 160] },
+      { torso: 80, head: 20, arm: [2, 2], farArm: hand(0.52, 0.05), leg: [97, 186, 95], farLeg: [246, 246, 160] },
+    ],
+  },
+  hipSwitch: {
+    name: '90/90 hip switch',
+    view: 'front',
+    anchor: { joint: 'hip', at: [0, 0.23] },
+    beat: 1100,
+    hold: 450,
+    poses: [
+      { torso: 0, arm: [200, 200], leg: [100, 255, 260], farLeg: [70, 165, 120], shorten: { thigh: 0.85, shin: 0.55 } },
+      { torso: 0, arm: [200, 200], leg: [30, 165, 120], shorten: { thigh: 0.85 } },
+      { torso: 0, arm: [200, 200], leg: [-70, -165, -120], farLeg: [-100, -255, -260], shorten: { thigh: 0.85, shin: 0.55 } },
+      { torso: 0, arm: [200, 200], leg: [30, 165, 120], shorten: { thigh: 0.85 } },
+    ],
+  },
+  hipCircles: {
+    name: 'Hip circles',
+    view: 'front',
+    ease: 'linear',
+    cycle: true,
+    hold: 0,
+    beat: 600,
+    key: 1,
+    poses: [
+      { hip: [0.1, 0.94], torso: -9, arm: [160, 300], leg: at(0.2), farLeg: at(-0.2) },
+      { hip: [0, 0.92], torso: 0, arm: [160, 300], leg: at(0.2), farLeg: at(-0.2) },
+      { hip: [-0.1, 0.94], torso: 9, arm: [160, 300], leg: at(0.2), farLeg: at(-0.2) },
+      { hip: [0, 0.96], torso: 0, arm: [160, 300], leg: at(0.2), farLeg: at(-0.2) },
+      { hip: [0.1, 0.94], torso: -9, arm: [160, 300], leg: at(0.2), farLeg: at(-0.2) },
+    ],
+  },
 } satisfies Record<string, Move>
 
 export type MoveId = keyof typeof MOVES
@@ -1639,5 +1688,9 @@ export const ALIASES: Partial<Record<MoveId, string[]>> = {
   doorwayChestStretch: ['doorway pec stretch', 'doorway pectoral stretch', 'doorway stretch'],
   bandBentOverRow: ['band bent-over row', 'bent-over resistance band row', 'ramat aplecat cu bandă'],
   bandTricepsExtension: ['resistance band overhead triceps extension', 'overhead band triceps extension', 'band triceps extension', 'extensii triceps cu bandă'],
+  thoracicRotation: ['T-spine rotation', 'quadruped thoracic rotation', 'quadruped T-spine rotation', 'rotații toracice'],
+  worldsGreatestStretch: ['WGS'],
+  hipSwitch: ['90 90 hip switch', 'hip switches', '90/90 hip rotation'],
+  hipCircles: ['standing hip circles', 'rotiri de bazin'],
   childsPoseLatStretch: ["child's pose side stretch", 'lateral child pose', "child's pose side reach"],
 }
