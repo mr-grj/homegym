@@ -590,7 +590,8 @@ kbd {
 }
 
 .stage[data-state='done'] .fill {
-  animation: glow 1.6s ease-in-out infinite;
+  opacity: 0.09;
+  animation: glow 1.4s ease-out;
 }
 
 .stage-head {
@@ -3236,8 +3237,8 @@ kbd {
 }
 
 @keyframes glow {
-  50% {
-    opacity: 0.22;
+  from {
+    opacity: 0.2;
   }
 }
 

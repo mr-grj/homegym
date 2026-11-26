@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore, type CSSProperties, type MouseEvent } from 'react'
 import { clock } from '../format'
+import { CHEER } from '../catalog'
 import { headroom } from '../figure'
 import { hasHints, hintNow } from '../hints'
 import { demoStep, moveFor } from '../moves'
@@ -111,6 +112,7 @@ export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSk
     />
   )
   const above = !!demo && f.step.rest && tall
+  const cheer = slot && !!run.finishedAt
 
   return (
     <main className="stage" data-state={state} onClick={onToggle} style={{ '--p': f.progress } as CSSProperties}>
@@ -153,6 +155,18 @@ export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSk
                   playing={(state === 'running' && !f.preparing) || state === 'armed'}
                   dim={f.step.rest}
                   restart={run.index * 2 + (f.preparing ? 0 : 1)}
+                />
+              )}
+              {cheer && (
+                <Demo
+                  key="cheer"
+                  id="cheer"
+                  move={CHEER}
+                  mirror={false}
+                  playing
+                  dim={false}
+                  restart={0}
+                  loops={3}
                 />
               )}
               {demo && f.step.rest && !above && (

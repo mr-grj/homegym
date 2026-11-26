@@ -1,7 +1,7 @@
-import { memo, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { centre, keyPose, loopLength, parts, poseAt, shape, VIEW, type Move, type Part, type Point } from '../figure'
 
-type Props = { id: string; move: Move; mirror: boolean; playing: boolean; dim: boolean; restart: number }
+type Props = { id: string; move: Move; mirror: boolean; playing: boolean; dim: boolean; restart: number; loops?: number }
 
 const motion = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
 const watchMotion = (change: () => void) => {
@@ -27,8 +27,8 @@ function Pieces({ list, place }: { list: Part[]; place: Place }) {
   )
 }
 
-/** A looping figure showing how to do the exercise; follows the timer and freezes under reduced motion. */
-export const Demo = memo(function Demo({ id, move, mirror, playing, dim, restart }: Props) {
+/** A looping figure showing how to do the exercise; follows the timer, freezes under reduced motion, and with `loops` settles on its first pose after that many. */
+export const Demo = memo(function Demo({ id, move, mirror, playing, dim, restart, loops }: Props) {
   const still = useStill()
   const body = useRef<SVGGElement>(null)
   const time = useRef(0)
@@ -36,9 +36,13 @@ export const Demo = memo(function Demo({ id, move, mirror, playing, dim, restart
   const loop = loopLength(move)
   const place: Place = (p) => [round((mirror ? -1 : 1) * (p[0] - cx)), round(-p[1])]
   const animate = loop > 0 && !still
+  const limit = loops ? loops * loop : Infinity
+  const [spent, setSpent] = useState(false)
+  const live = playing && !spent
 
   useEffect(() => {
     time.current = 0
+    setSpent(false)
   }, [restart, move])
 
   useEffect(() => {
@@ -55,13 +59,14 @@ export const Demo = memo(function Demo({ id, move, mirror, playing, dim, restart
       })
     }
     draw()
-    if (!playing) return
+    if (!live) return
     let frame = 0
     let last = performance.now()
     let drawn = 0
     const tick = (now: number) => {
-      time.current += Math.min(100, now - last)
+      time.current = Math.min(limit, time.current + Math.min(100, now - last))
       last = now
+      if (time.current >= limit) return (draw(), setSpent(true))
       if (now - drawn >= FRAME) {
         drawn = now
         draw()
@@ -70,7 +75,7 @@ export const Demo = memo(function Demo({ id, move, mirror, playing, dim, restart
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [move, mirror, playing, animate, restart])
+  }, [move, mirror, live, animate, restart, limit])
 
   const first = parts(shape(move, animate ? poseAt(move, time.current) : keyPose(move)))
   const ghost = still && move.poses.length > 1 ? parts(shape(move, move.poses[0])) : null
@@ -82,7 +87,7 @@ export const Demo = memo(function Demo({ id, move, mirror, playing, dim, restart
       viewBox={`${-width / 2} ${floor - height} ${width} ${height}`}
       data-move={id}
       data-dim={dim || undefined}
-      data-playing={(animate && playing) || undefined}
+      data-playing={(animate && live) || undefined}
       aria-hidden
     >
       <line className="demo-floor" x1={-width / 2} x2={width / 2} y1={0} y2={0} />

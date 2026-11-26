@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { BODY, centre, joint, keyPose, loopLength, poseAt, shape, shapePoints, VIEW, type Move, type Point } from './figure'
+import { CHEER } from './catalog'
 import { allNames, CATALOG, demoStep, moveFor, moveKey, MOVES } from './moves'
 import { parseRoutine } from './routine'
 import { arm, jump, finish } from './timer'
@@ -229,9 +230,14 @@ describe('the step to show', () => {
     expect(demoStep(jump(run, 4, 0))).toBeNull()
     expect(demoStep(finish(jump(run, 3, 0), 0))).toBeNull()
   })
+
+  test('the finish celebration is never mistaken for an exercise', () => {
+    expect(moveFor(CHEER.name)).toBeNull()
+    expect(Object.values(MOVES)).not.toContain(CHEER)
+  })
 })
 
-describe.each(moves)('%s', (_, move) => {
+describe.each([...moves, ['the finish celebration', CHEER] as [string, Move]])('%s', (_, move) => {
   const shapes = frames(move).map((pose) => shape(move, pose))
   const cx = centre(move)
 

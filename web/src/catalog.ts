@@ -1694,3 +1694,14 @@ export const ALIASES: Partial<Record<MoveId, string[]>> = {
   hipCircles: ['standing hip circles', 'rotiri de bazin'],
   childsPoseLatStretch: ["child's pose side stretch", 'lateral child pose', "child's pose side reach"],
 }
+
+/** The figure on the finish screen: a double biceps flex, then a hop with both arms up. Not an exercise, so names never match it. */
+export const CHEER: Move = {
+  name: 'Celebrate',
+  view: 'front',
+  key: 0,
+  poses: [
+    { hip: [0, 0.93], torso: 0, arm: [88, 318], leg: at(0.16), hold: 600, t: 320 },
+    { hip: [0, 1.0], torso: 0, arm: [28, 12], leg: [178, 178, 110], hold: 160, t: 320 },
+  ],
+}
