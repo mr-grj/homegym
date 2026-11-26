@@ -159,7 +159,10 @@ export function Stage({ run, elapsed, demos, water: drinks, sips, onToggle, onSk
               )}
             </div>
           )}
-          <div className={['time', f.display.length > 5 && 'long', urgent && 'urgent', f.preparing && 'prep'].filter(Boolean).join(' ')}>
+          <div
+            key={urgent ? f.display : 'time'}
+            className={['time', f.display.length > 5 && 'long', urgent && 'urgent', f.preparing && 'prep'].filter(Boolean).join(' ')}
+          >
             {f.display}
           </div>
         </div>

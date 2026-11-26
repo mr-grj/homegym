@@ -37,10 +37,13 @@ test('a countdown pauses, resumes, changes length and logs itself', async ({ app
   await shortcut(app, 'Space')
   await expect(app).toHaveTitle('❚❚ 1:20 · plank')
   await expect(app.locator('.cue')).toContainText('Paused')
+  await expect(time).toHaveCSS('opacity', '0.4')
+  await expect(time).toHaveCSS('animation-name', 'none')
   await app.clock.runFor(30_000)
   await expect(time).toHaveText('1:20')
 
   await shortcut(app, 'Space')
+  await expect(time).toHaveCSS('opacity', '1')
   await app.clock.runFor(5_000)
   await expect(time).toHaveText('1:15')
 
